@@ -1,0 +1,567 @@
+---
+alwaysApply: true
+---
+# OmniAskAI — Next.js Architecture Rules
+
+## Architecture Philosophy
+
+Build OmniAskAI as **one cohesive Next.js full-stack application**.
+
+```text
+Browser
+   ↓
+Next.js
+├── Public / SEO experience
+├── Interactive knowledge workspace
+├── Admin / auth / subscriptions
+├── Product database
+└── Server-side APE integration
+        ↓
+       APE
+```
+
+Optimize for:
+
+* simple, readable code
+* meaningful naming
+* server-first rendering
+* small client boundaries
+* reusable feature components
+* strong SEO
+* predictable caching
+* measurable performance
+* easy future change
+
+Prefer **explicit code over clever abstraction**.
+
+Do not introduce architectural layers until they solve a real problem.
+
+---
+
+## 1. Feature-First Design
+
+Organize code around **product capabilities**, not technical categories alone.
+
+Examples:
+
+```text
+topics
+conversations
+admin
+accounts
+subscriptions
+bookmarks
+```
+
+A feature should own the UI, logic, types and feature-specific behavior required to understand it.
+
+Move something into shared code only when it is genuinely reused.
+
+**Do not generalize after the first use.**
+
+---
+
+## 2. Naming Is Part of Architecture
+
+Every non-framework file should clearly communicate its responsibility.
+
+Prefer:
+
+```text
+conversation-source-drawer.tsx
+topic-knowledge-card.tsx
+ape-api-client.ts
+subscription-entitlement-service.ts
+topic-validation-schema.ts
+```
+
+Avoid vague names:
+
+```text
+utils.ts
+helpers.ts
+service.ts
+actions.ts
+data.ts
+common.ts
+```
+
+Framework-required names such as `page.tsx`, `layout.tsx` and `route.ts` are exceptions. Keep them thin and move meaningful logic into clearly named code.
+
+Use full words unless an abbreviation is universally obvious.
+
+---
+
+## 3. Server First, Client Where Needed
+
+Use **Server Components by default**.
+
+Server-side is preferred for:
+
+* public/topic content
+* database reads
+* SEO content
+* authentication state
+* subscription state
+* initial page data
+* sensitive configuration
+
+Use Client Components only for real browser interaction:
+
+* composer
+* streaming state
+* drawers/modals
+* local UI state
+* animation
+* browser APIs
+
+Keep `'use client'` boundaries as low as practical.
+
+Do not convert an entire page to a Client Component because one section is interactive.
+
+---
+
+## 4. Keep Data Flow Direct
+
+Prefer the shortest clean path.
+
+### Reads
+
+```text
+Server UI
+→ data access / service when needed
+→ database or external service
+```
+
+### Mutations
+
+```text
+UI
+→ Server Action / Route Handler
+→ validation
+→ business operation
+→ persistence
+→ revalidation
+```
+
+### APE conversation
+
+```text
+Browser
+→ Next.js server
+→ APE
+→ streamed response
+→ Browser
+```
+
+Never expose APE credentials to the browser.
+
+Do not call OmniAskAI's own HTTP API from a Server Component when the server can call the underlying function directly.
+
+---
+
+## 5. Keep the Backend Small
+
+Do not automatically create:
+
+```text
+Controller
+→ Manager
+→ Service
+→ Repository
+→ Adapter
+```
+
+Use the minimum useful abstraction.
+
+Typical rule:
+
+```text
+Route / Action
+      ↓
+Service       ← only when business orchestration exists
+      ↓
+Data Access
+```
+
+Simple reads can go directly to data access.
+
+Use services when logic coordinates multiple operations, external systems or important business rules.
+
+APE remains responsible for RAG, retrieval, generation, grounding and citations.
+
+---
+
+## 6. Reuse Without Over-Abstraction
+
+Prefer composition.
+
+Create reusable UI for repeated visual or behavioral patterns.
+
+Keep topic differences **configuration-driven** where practical:
+
+```text
+same component
++ topic theme
++ content/configuration
+= different knowledge experience
+```
+
+Do not build separate implementations for Income Tax, Literature, History, etc. unless their actual behavior eventually requires it.
+
+Avoid giant "universal components" with many unrelated boolean props.
+
+---
+
+## 7. State Management
+
+Prefer state in this order:
+
+```text
+Server / database state
+        ↓
+URL state
+        ↓
+Local component state
+        ↓
+Feature Context
+        ↓
+Global state library only if justified
+```
+
+Do not introduce Redux, Zustand or TanStack Query by default.
+
+Use them only when the application develops a genuine requirement they solve better than native React/Next.js patterns.
+
+Keep transient interaction state close to the component that owns it.
+
+---
+
+## 8. Caching — One Owner, Clear Freshness
+
+Caching must be intentional.
+
+Classify data first:
+
+### Public stable/configuration data
+
+Examples:
+
+* topic details
+* topic themes
+* suggested questions
+* public landing content
+
+Use Next.js server caching where beneficial.
+
+Invalidate by meaningful tags/events when Admin updates or publishes data.
+
+### User-specific data
+
+Examples:
+
+* conversations
+* bookmarks
+* account
+* subscription
+* usage
+
+Treat as dynamic/private unless a deliberate per-user caching strategy exists.
+
+Never allow shared caching to leak user data.
+
+### Streaming / live conversation state
+
+Do not cache active generated responses.
+
+Persist the completed result where product history requires it.
+
+### Cache Conflict Rule
+
+Avoid stacking multiple independent caches over the same data without a clear owner.
+
+```text
+Database
+   ↓
+Server cache          ← primary cached representation
+   ↓
+render
+```
+
+If browser caching/query libraries are later introduced, explicitly define:
+
+* which cache owns freshness
+* TTL/stale policy
+* invalidation trigger
+* mutation behavior
+
+Do not create situations where:
+
+```text
+Server cache says NEW
+Browser cache says OLD
+Indexed cache says OLDER
+```
+
+without a synchronization contract.
+
+Start simple. Add another cache layer only after measuring a need.
+
+---
+
+## 9. Performance Is Part of Definition of Done
+
+Do not wait for a later "performance phase."
+
+### React
+
+Use React Compiler.
+
+Do not scatter:
+
+* `useMemo`
+* `useCallback`
+* `React.memo`
+
+by habit.
+
+Use manual memoization only when profiling or a concrete dependency/stability requirement justifies it.
+
+### Network
+
+Avoid request waterfalls.
+
+Fetch independent server data in parallel.
+
+Use streaming/Suspense where it improves perceived loading.
+
+Do not issue N requests when one aggregated operation can provide the required data.
+
+### User input
+
+Debounce **network-triggering** autocomplete/search where appropriate.
+
+Do not unnecessarily debounce ordinary local input.
+
+### Client JavaScript
+
+Keep Client Components focused.
+
+Lazy-load genuinely heavy, rarely used client features.
+
+Avoid adding libraries for functionality Next.js/React already handles well.
+
+### Media
+
+Use Next.js image/font optimization.
+
+Serve correctly sized responsive assets.
+
+Large decorative topic artwork must not delay primary content.
+
+---
+
+## 10. Conversation Performance
+
+Conversation UX is latency-sensitive.
+
+```text
+Submit
+→ immediate pending state
+→ stream answer
+→ progressively render
+→ finalize citations / grounding
+```
+
+Do not wait for the full APE response before showing useful output.
+
+Keep streaming updates isolated so every token does not unnecessarily rerender the entire workspace/history.
+
+Load long histories progressively.
+
+---
+
+## 11. SEO & Rendering
+
+Public discovery is part of the business model.
+
+Landing pages and public topic pages should provide meaningful **server-rendered HTML**.
+
+Use modern Next.js metadata capabilities for:
+
+* page title
+* description
+* canonical
+* Open Graph
+* social metadata
+* sitemap
+* robots
+* appropriate JSON-LD
+
+Use semantic HTML and real heading hierarchy.
+
+Important topic content must not depend solely on client-side rendering.
+
+Prefer:
+
+```text
+server-rendered useful content
+        +
+small hydrated interactive islands
+```
+
+over:
+
+```text
+empty shell
+→ JavaScript loads
+→ content appears
+```
+
+Private conversations, account areas and admin surfaces should normally be excluded from indexing.
+
+---
+
+## 12. Security Boundaries
+
+Secrets and privileged integrations are server-only.
+
+Validate all external/server boundaries.
+
+Authorization belongs beside protected server operations, not only in navigation or middleware.
+
+Never trust browser-supplied:
+
+* user identity
+* plan/entitlement
+* APE project mapping
+* pricing
+* admin permissions
+
+Use maintained libraries for authentication and billing instead of implementing security primitives manually.
+
+---
+
+## 13. Clean Code Rules
+
+* TypeScript strict mode.
+* One clear responsibility per function/component.
+* Prefer descriptive names over comments.
+* Avoid unnecessary duplication.
+* Keep functions/components reasonably small.
+* Avoid deeply nested conditionals; use early returns where clearer.
+* Keep business decisions out of presentation components.
+* Keep external API formats away from UI where transformation is needed.
+* Delete dead/obsolete code instead of keeping speculative compatibility.
+* Add dependencies only when they provide clear value.
+
+Add short 1–2 line comments only where the **reason** is not obvious:
+
+```ts
+// APE credentials stay server-side; this endpoint only proxies the stream.
+```
+
+Do not narrate obvious code.
+
+---
+
+## 14. Quality & Verification
+
+Every significant feature should be verified beyond "it compiles."
+
+Cursor should check as relevant:
+
+```text
+implementation
+    ↓
+lint + typecheck
+    ↓
+tests
+    ↓
+production build
+    ↓
+browser verification
+    ↓
+desktop + mobile
+    ↓
+console/network
+    ↓
+performance + SEO sanity
+```
+
+Critical journeys should eventually have E2E coverage.
+
+Measure performance before adding complex optimizations.
+
+Periodically check:
+
+* Core Web Vitals
+* Lighthouse
+* bundle growth
+* request waterfalls
+* unnecessary Client Components
+* slow interactions
+* accessibility basics
+
+---
+
+## Avoid
+
+* over-layered architecture ❌
+* vague filenames ❌
+* giant page components ❌
+* `'use client'` everywhere ❌
+* direct APE calls from browser ❌
+* global state by default ❌
+* TanStack Query everywhere ❌
+* multiple conflicting cache layers ❌
+* premature memoization ❌
+* premature generic components ❌
+* client-only SEO content ❌
+* business logic inside presentation UI ❌
+* unnecessary microservices ❌
+* optimization without measurement ❌
+
+---
+
+## Decision Rule
+
+When several approaches are valid:
+
+```text
+Next.js / React native
+        ↓
+simple explicit code
+        ↓
+small reusable abstraction
+        ↓
+third-party library
+        ↓
+custom infrastructure
+```
+
+Choose the first level that cleanly solves the problem.
+
+> **Simple, explicit, searchable and measurable beats clever architecture.**
+
+Each feature plan may decide its own files, components and internal structure while remaining inside these rules.
+
+---
+
+## Feature Documentation
+
+Each meaningful product feature or module must have a focused document under `docs/features/`.
+
+Example:
+
+`docs/features/conversations_feature.md`
+
+The document should briefly explain:
+- what the feature does and its product/business purpose
+- important user flows and business rules
+- architecture and responsibility boundaries
+- key data/integration flow
+- important configuration, edge cases, or operational notes
+- relevant testing/verification expectations
+
+Keep feature docs concise and current. Update the existing document when behavior changes rather than creating implementation-history notes. less text non verbose, be precise and attractive with engaging visuals, flow and example if needed. 

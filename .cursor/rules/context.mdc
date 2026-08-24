@@ -1,0 +1,262 @@
+---
+alwaysApply: true
+---
+# OmniAskAI — Project Context
+
+> Living project snapshot for developers and AI agents.
+> Read before planning or implementation.
+> Update after meaningful changes so this always reflects the **current truth**, not project history.
+
+---
+
+## What Is OmniAskAI?
+
+OmniAskAI is a consumer-facing knowledge product built on top of **AI Platform Engine (APE / RAG Builder)**.
+
+Its core idea:
+
+> **Each topic is a curated knowledge world with its own trusted sources, context, visual identity, and experience — not an empty generic chatbot.**
+
+Example topics may include:
+
+* Bangladesh Income Tax
+* Laws and regulations
+* Business guidance
+* Literature
+* Bangladesh History
+* Movies and culture
+
+Primary experience:
+
+```text
+Discover topic
+   ↓
+Enter knowledge workspace
+   ↓
+Ask / continue conversation
+   ↓
+Grounded answer
+   ↓
+Inspect citations / evidence
+   ↓
+Follow-up naturally
+```
+
+---
+
+## Why It Exists
+
+General AI tools are broad. OmniAskAI focuses on **curated, trustworthy, domain-specific knowledge experiences**, especially where local context, authoritative sources, Bangla/English/Banglish support, and citations matter.
+
+Long-term product value comes from:
+
+```text
+Curated knowledge
+→ trustworthy experience
+→ repeated usage
+→ premium knowledge/features
+→ subscription
+```
+
+---
+
+## Relationship With APE
+
+APE is the reusable AI infrastructure platform already running at:
+
+```text
+https://api.omniaskai.com
+```
+
+APE owns:
+
+```text
+ingestion
+→ OCR / parsing
+→ chunking
+→ embeddings
+→ hybrid retrieval
+→ reranking
+→ grounding
+→ generation
+→ citations
+→ evaluation
+```
+
+OmniAskAI owns the **consumer product layer**:
+
+```text
+topics
+UI / UX
+users
+history
+bookmarks
+admin
+subscriptions
+analytics
+SEO
+business rules
+topic routing
+```
+
+Do not duplicate RAG or AI infrastructure inside OmniAskAI.
+
+APE is intentionally designed so external applications retain their own users, UI and business workflows while APE provides project-scoped AI capabilities.
+
+---
+
+## Application Shape
+
+OmniAskAI starts as one cohesive **Next.js full-stack application**.
+
+```text
+Browser
+   ↓
+OmniAskAI — Next.js
+├── public / SEO experience
+├── topic workspace
+├── conversation UI
+├── product data
+├── admin / auth / subscriptions
+└── server-side APE integration
+         ↓
+        APE
+```
+
+APE credentials remain server-side.
+
+```text
+Browser
+→ Next.js server
+→ APE
+```
+
+The browser must never receive privileged APE Organization credentials. 
+
+---
+
+## Topic vs APE Project
+
+An OmniAskAI **Topic** is a product concept.
+
+An APE **Project** is a knowledge/RAG boundary.
+
+Keep them separate:
+
+```text
+OmniAskAI Topic
+       ↓
+Knowledge Mapping
+       ↓
+APE Project(s)
+```
+
+Initially this may simply be:
+
+```text
+1 Topic → 1 APE Project
+```
+
+but do not hard-couple the concepts.
+
+---
+
+## Product Experience Direction
+
+Current visual direction is defined by the approved landing-page and conversation-workspace concepts.
+
+Key principles:
+
+* premium, calm and spacious
+* topic discovery over generic chatbot UX
+* conversation remains the primary experience
+* editorial-style grounded answers
+* citations and evidence easy to inspect
+* topic identity without redesigning the whole product
+* minimal dashboard clutter
+* strong responsive/mobile experience
+* public topic content should support SEO and discovery
+
+---
+
+## Current Repository Structure
+
+> **Update this section as the repository evolves. Keep only important structure, not every file.**
+
+```text
+omniaskai/
+├── src/
+│   ├── app/          # Next.js routes and framework entry points
+│   ├── features/     # Product capabilities
+│   ├── server/       # Server-only logic, data and integrations
+│   └── shared/       # Truly reusable cross-feature code
+│
+├── public/           # Static assets / topic artwork
+├── docs/             # Product and technical documentation
+└── .cursor/
+    └── rules/        # Architecture and living project context
+```
+
+Replace this example tree with the **actual current structure** once implementation begins.
+
+---
+
+## Important Current Decisions
+
+* OmniAskAI and APE remain separate products.
+* OmniAskAI is initially one Next.js full-stack application.
+* APE remains the only RAG/AI infrastructure layer.
+* APE credentials are server-side only.
+* Topic and APE Project remain separate concepts.
+* Topic behavior should be configuration-driven where practical.
+* Public discovery and SEO are important product concerns.
+* Prefer simple, explicit architecture over premature complexity.
+
+---
+
+## Current Status
+
+> Keep this section short and update it frequently.
+
+```text
+Current state:
+Initial implementation stage
+
+Current focus:
+Polished landing page and topic conversation experience
+
+Topic data:
+Static/sample data initially
+
+APE integration:
+Will be added during the first functional implementation
+
+Admin / public auth / subscriptions:
+Not implemented yet
+```
+
+---
+
+## Maintenance Rule
+
+After a meaningful implementation, update this file when any of these change:
+
+* important repository structure
+* current capabilities
+* integrations
+* architecture boundaries
+* major product decisions
+* current development focus
+
+Do **not** use this as:
+
+* roadmap
+* changelog
+* detailed architecture guide
+* feature documentation
+
+Those belong in separate documents.
+
+The purpose of this file is simple:
+
+> A new developer or AI agent should understand **what OmniAskAI is, how it relates to APE, how the product works, what currently exists, and where to look next** within a few minutes.
