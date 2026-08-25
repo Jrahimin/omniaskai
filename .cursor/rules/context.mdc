@@ -186,18 +186,17 @@ Key principles:
 ```text
 omniaskai/
 ├── src/
-│   ├── app/          # Next.js routes and framework entry points
-│   ├── features/     # Product capabilities
-│   ├── server/       # Server-only logic, data and integrations
-│   └── shared/       # Truly reusable cross-feature code
-│
-├── public/           # Static assets / topic artwork
-├── docs/             # Product and technical documentation
+│   ├── app/                 # Root layout, foundation page, global styles
+│   └── features/
+│       └── topics/          # Topic type, sample catalog, read helpers
+├── docs/
+│   ├── project_plan.md
+│   └── features/
+│       └── topics_feature.md
+├── reference-concept-pages/ # Approved landing and conversation concepts
 └── .cursor/
-    └── rules/        # Architecture and living project context
+    └── rules/               # Architecture and living project context
 ```
-
-Replace this example tree with the **actual current structure** once implementation begins.
 
 ---
 
@@ -220,16 +219,18 @@ Replace this example tree with the **actual current structure** once implementat
 
 ```text
 Current state:
-Initial implementation stage
+Phase 1A product foundation is in place
+(Next.js 16, semantic tokens, document shell, static Topic catalog)
 
 Current focus:
-Polished landing page and topic conversation experience
+Phase 1 Step 2 — approved landing-page experience
 
 Topic data:
-Static/sample data initially
+Static sample module in src/features/topics/
+(four published topics; DB replacement later)
 
 APE integration:
-Will be added during the first functional implementation
+Not started
 
 Admin / public auth / subscriptions:
 Not implemented yet
