@@ -27,7 +27,15 @@ type Topic = {
 };
 ```
 
-Deferred until a later step needs them: source stats, artwork, accents, suggested questions, previews, citations, APE mapping.
+Deferred on the **Topic type** itself: source stats, APE mapping, suggested questions. Landing presentation (artwork path, featured flag) lives beside the catalog and does not make Topic bilingual.
+
+## Presentation (landing)
+
+```text
+src/features/topics/topic-presentation.ts
+```
+
+Slug → artwork path, `objectPosition`, `featured`. Display strings (titles, source counts, previews) stay in `src/features/landing/landing-language.ts`.
 
 ## Reads
 
@@ -65,10 +73,14 @@ src/features/topics/
   sample-topics.ts
   get-published-topics.ts
   get-topic-by-slug.ts
+  topic-presentation.ts
+  topic-page-language.ts
 ```
+
+`/topics/[slug]` is a **minimal** destination (title, subtitle, back) so landing Explore does not 404. It is not the conversation workspace.
 
 ## Verification
 
 - Typecheck covers the contract and helpers
-- Four published topics; unknown slugs return `undefined`
-- Landing/conversation UI is out of scope for this step
+- Four published topics; unknown slugs return `undefined` / not-found
+- Landing uses presentation + landing copy; Topic stays lean

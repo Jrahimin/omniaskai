@@ -185,17 +185,20 @@ Key principles:
 
 ```text
 omniaskai/
+├── public/                  # brand, landing, topic artwork
 ├── src/
-│   ├── app/                 # Root layout, foundation page, global styles
-│   └── features/
-│       └── topics/          # Topic type, sample catalog, read helpers
+│   ├── app/                 # layout, landing page, thin /topics/[slug]
+│   ├── features/
+│   │   ├── landing/         # marketing landing, EN/BN copy
+│   │   └── topics/          # Topic catalog, presentation, read helpers
+│   └── lib/locale/          # cookie locale + language switch
 ├── docs/
 │   ├── project_plan.md
 │   └── features/
-│       └── topics_feature.md
-├── reference-concept-pages/ # Approved landing and conversation concepts
-└── .cursor/
-    └── rules/               # Architecture and living project context
+│       ├── topics_feature.md
+│       └── landing_feature.md
+├── reference-concept-pages/
+└── .cursor/rules/
 ```
 
 ---
@@ -219,15 +222,15 @@ omniaskai/
 
 ```text
 Current state:
-Phase 1A product foundation is in place
-(Next.js 16, semantic tokens, document shell, static Topic catalog)
+Phase 1B landing experience is in place
+(approved landing at /, EN/BN cookie locale, static topics)
 
 Current focus:
-Phase 1 Step 2 — approved landing-page experience
+Phase 1 Step 3 — topic conversation workspace
 
 Topic data:
 Static sample module in src/features/topics/
-(four published topics; DB replacement later)
+(four published topics; presentation map for landing artwork)
 
 APE integration:
 Not started
