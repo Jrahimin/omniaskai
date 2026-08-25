@@ -76,5 +76,5 @@ src/features/landing/
 - `npm run lint`, `typecheck`, `build`
 - Browser at 1024 (primary), plus ~1280 / ~1440 / ~375
 - Locale switch + refresh keeps Bangla; `html lang` matches
-- Explore opens the thin topic page; unknown slug → not-found
+- Explore opens the topic conversation workspace; unknown slug → not-found
 - Auth / Pricing / About do not navigate

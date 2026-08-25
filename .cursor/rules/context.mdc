@@ -187,16 +187,18 @@ Key principles:
 omniaskai/
 ├── public/                  # brand, landing, topic artwork
 ├── src/
-│   ├── app/                 # layout, landing page, thin /topics/[slug]
+│   ├── app/                 # layout, landing, /topics/[slug] workspace
 │   ├── features/
 │   │   ├── landing/         # marketing landing, EN/BN copy
-│   │   └── topics/          # Topic catalog, presentation, read helpers
+│   │   ├── topics/          # Topic catalog, presentation, read helpers
+│   │   └── conversations/   # topic workspace UI + static fixtures
 │   └── lib/locale/          # cookie locale + language switch
 ├── docs/
 │   ├── project_plan.md
 │   └── features/
 │       ├── topics_feature.md
-│       └── landing_feature.md
+│       ├── landing_feature.md
+│       └── conversations_feature.md
 ├── reference-concept-pages/
 └── .cursor/rules/
 ```
@@ -222,15 +224,20 @@ omniaskai/
 
 ```text
 Current state:
-Phase 1B landing experience is in place
-(approved landing at /, EN/BN cookie locale, static topics)
+Phase 1C topic conversation workspace is in place
+(static fixtures, compact topic band, editorial answers,
+citation→source loop, first-time guide, mock composer)
 
 Current focus:
-Phase 1 Step 3 — topic conversation workspace
+Phase 1 Step 4 — real APE integration
 
 Topic data:
 Static sample module in src/features/topics/
-(four published topics; presentation map for landing artwork)
+(four published topics; presentation map for artwork/mood)
+
+Workspace:
+Static fixtures in src/features/conversations/
+(same shell for all topics; no streaming)
 
 APE integration:
 Not started

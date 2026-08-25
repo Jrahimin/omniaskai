@@ -1,6 +1,6 @@
 # Topics
 
-OmniAskAI is organized around **Topics** — curated knowledge worlds, not a generic chatbot. Each topic has its own identity, trusted sources, and later its own conversation workspace.
+OmniAskAI is organized around **Topics** — curated knowledge worlds, not a generic chatbot. Each topic has its own identity, trusted sources, and a conversation workspace at `/topics/[slug]`.
 
 Phase 1A ships the **static catalog contract** so landing, workspace, and a future database can share one shape.
 
@@ -74,10 +74,9 @@ src/features/topics/
   get-published-topics.ts
   get-topic-by-slug.ts
   topic-presentation.ts
-  topic-page-language.ts
 ```
 
-`/topics/[slug]` is a **minimal** destination (title, subtitle, back) so landing Explore does not 404. It is not the conversation workspace.
+`/topics/[slug]` is the **conversation workspace** (see `docs/features/conversations_feature.md`). Unknown slugs call `notFound()`. The Topic type is unchanged.
 
 ## Verification
 

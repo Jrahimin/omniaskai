@@ -1,58 +1,65 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ConversationWorkspace } from "@/features/conversations/conversation-workspace";
+import { getConversationCopy } from "@/features/conversations/get-conversation-copy";
+import { isConversationTopicSlug } from "@/features/conversations/conversation-language";
+import { getTopicWorkspace } from "@/features/conversations/get-topic-workspace";
+import { getPublishedTopics } from "@/features/topics/get-published-topics";
 import { getTopicBySlug } from "@/features/topics/get-topic-by-slug";
-import { getTopicPageCopy } from "@/features/topics/topic-page-language";
+import { getTopicPresentation } from "@/features/topics/topic-presentation";
 import { getRequestLocale } from "@/lib/locale/get-request-locale";
 
-type TopicDestinationPageProps = {
+type TopicWorkspacePageProps = {
   params: Promise<{ slug: string }>;
 };
 
+export function generateStaticParams() {
+  return getPublishedTopics().map((topic) => ({ slug: topic.slug }));
+}
+
 export async function generateMetadata({
   params,
-}: TopicDestinationPageProps): Promise<Metadata> {
+}: TopicWorkspacePageProps): Promise<Metadata> {
   const { slug } = await params;
   const topic = getTopicBySlug(slug);
+  const locale = await getRequestLocale();
+  const copy = getConversationCopy(locale);
 
-  if (!topic) {
+  if (!topic || !isConversationTopicSlug(slug)) {
     return { title: "OmniAskAI" };
   }
 
   return {
-    title: topic.title,
-    description: topic.subtitle,
+    title: copy.topics[slug].title,
+    description: copy.topics[slug].subtitle,
     robots: { index: false, follow: false },
   };
 }
 
-export default async function TopicDestinationPage({
+export default async function TopicWorkspacePage({
   params,
-}: TopicDestinationPageProps) {
+}: TopicWorkspacePageProps) {
   const { slug } = await params;
   const topic = getTopicBySlug(slug);
+  const workspace = getTopicWorkspace(slug);
 
-  if (!topic) {
+  if (!topic || !workspace || !isConversationTopicSlug(slug)) {
     notFound();
   }
 
   const locale = await getRequestLocale();
-  const copy = getTopicPageCopy(locale);
+  const copy = getConversationCopy(locale);
+  const presentation = getTopicPresentation(topic);
+  const identity = copy.topics[slug];
 
   return (
-    <main id="main" tabIndex={-1} className="landing-shell py-16">
-      <p>
-        <Link href="/" className="text-brand text-sm font-medium">
-          {copy.backToHome}
-        </Link>
-      </p>
-      <h1 className="text-foreground mt-8 text-3xl font-bold tracking-tight">
-        {topic.title}
-      </h1>
-      <p className="text-muted mt-3 max-w-xl text-base leading-relaxed">
-        {topic.subtitle}
-      </p>
-    </main>
+    <ConversationWorkspace
+      locale={locale}
+      copy={copy}
+      identity={identity}
+      presentation={presentation}
+      workspace={workspace}
+    />
   );
 }
