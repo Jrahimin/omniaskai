@@ -1,13 +1,22 @@
+export type SourceKind = "knowledge" | "web";
+
+export type SourceProvenance =
+  | "knowledge"
+  | "web"
+  | "knowledge_and_web"
+  | "none";
+
 export type ConversationSource = {
   id: string;
   index: number;
   title: string;
   shortLabel: string;
-  publisher: string;
+  publisher?: string;
   year?: string;
-  locator: string;
-  excerpt: string;
+  locator?: string;
+  excerpt?: string;
   href?: string;
+  kind?: SourceKind;
 };
 
 export type AnswerListIcon =
@@ -40,7 +49,12 @@ export type UserTurn = {
   createdAtLabel: string;
 };
 
-export type AssistantStatus = "grounded" | "insufficient" | "error" | "pending";
+export type AssistantStatus =
+  | "grounded"
+  | "insufficient"
+  | "error"
+  | "pending"
+  | "streaming";
 
 export type AssistantTurn = {
   id: string;
@@ -49,6 +63,8 @@ export type AssistantTurn = {
   blocks: AnswerBlock[];
   sourceIds: string[];
   followUps: string[];
+  sourceProvenance?: SourceProvenance;
+  retryable?: boolean;
 };
 
 export type ConversationTurn = UserTurn | AssistantTurn;
@@ -63,14 +79,19 @@ export type Conversation = {
   turns: ConversationTurn[];
 };
 
+export type ConversationTurnFinal = {
+  status: "grounded" | "insufficient";
+  blocks: AnswerBlock[];
+  sources: ConversationSource[];
+  sourceIds: string[];
+  sourceProvenance: SourceProvenance;
+  followUps: [];
+};
+
 export type TopicWorkspace = {
   topicSlug: string;
-  defaultConversationId: string;
-  conversations: Conversation[];
-  sources: ConversationSource[];
   exploreItemIds: string[];
   starterQuestions: string[];
-  cannedReply: Omit<AssistantTurn, "id">;
 };
 
 export function isAssistantTurn(
@@ -83,13 +104,17 @@ export function isUserTurn(turn: ConversationTurn): turn is UserTurn {
   return turn.role === "user";
 }
 
+export function isOpenAssistantTurn(turn: AssistantTurn): boolean {
+  return turn.status === "pending" || turn.status === "streaming";
+}
+
 export function getLatestAssistantTurn(
   turns: ConversationTurn[],
 ): AssistantTurn | undefined {
   for (let index = turns.length - 1; index >= 0; index -= 1) {
     const turn = turns[index];
 
-    if (turn && isAssistantTurn(turn) && turn.status !== "pending") {
+    if (turn && isAssistantTurn(turn) && !isOpenAssistantTurn(turn)) {
       return turn;
     }
   }
@@ -151,6 +176,25 @@ export function sourceById(
   return catalog.find((item) => item.id === id);
 }
 
+export function mergeConversationSources(
+  catalog: ConversationSource[],
+  incoming: ConversationSource[],
+): ConversationSource[] {
+  const next = [...catalog];
+  const seen = new Set(catalog.map((source) => source.id));
+
+  for (const source of incoming) {
+    if (seen.has(source.id)) {
+      continue;
+    }
+
+    seen.add(source.id);
+    next.push({ ...source, index: next.length + 1 });
+  }
+
+  return next;
+}
+
 export function collectAnswerText(turn: AssistantTurn): string {
   return turn.blocks
     .map((block) => {
@@ -163,7 +207,7 @@ export function collectAnswerText(turn: AssistantTurn): string {
       }
 
       if (block.type === "insufficient") {
-        return `${block.title}\n${block.body}`;
+        return [block.title, block.body].filter(Boolean).join("\n");
       }
 
       return block.items

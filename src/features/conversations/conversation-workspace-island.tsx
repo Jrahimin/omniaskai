@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useReducer, useRef, useState } from "react";
 
 import type { TopicPresentation } from "@/features/topics/topic-presentation";
 import type { Locale } from "@/lib/locale/locale";
@@ -24,12 +24,16 @@ import {
 import { ConversationHistorySidebar } from "./conversation-history-sidebar";
 import type { ConversationCopy, TopicIdentityCopy } from "./conversation-language";
 import { CloseIcon } from "./conversation-icons";
+import {
+  emptyWorkspaceSession,
+  workspaceSessionReducer,
+} from "./conversation-session-reducer";
 import { ConversationSourcePanel } from "./conversation-source-panel";
+import { readConversationTurnStream } from "./conversation-stream-client";
 import { ConversationThread } from "./conversation-thread";
 import { ConversationTopicGuideDialog } from "./conversation-topic-guide-dialog";
 import { ConversationTopicHeader } from "./conversation-topic-header";
 
-const NEW_CONVERSATION_ID = "new";
 const CRAMPED_QUERY = "(max-width: 899px)";
 const SHEET_QUERY = "(max-width: 639px)";
 
@@ -54,16 +58,16 @@ export function ConversationWorkspaceIsland({
   const historyDialogRef = useRef<HTMLDialogElement>(null);
   const sourcesDialogRef = useRef<HTMLDialogElement>(null);
   const guideDialogRef = useRef<HTMLDialogElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const operationSeq = useRef(0);
 
   const [cramped, setCramped] = useState(false);
   const [useSheet, setUseSheet] = useState(false);
   const [historyCollapsed, setHistoryCollapsed] = useState(false);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(
-    workspace.defaultConversationId,
+  const [session, dispatch] = useReducer(
+    workspaceSessionReducer,
+    emptyWorkspaceSession,
   );
-  const [sessionTurns, setSessionTurns] = useState<
-    Record<string, ConversationTurn[]>
-  >({});
   const [draft, setDraft] = useState("");
   const [search, setSearch] = useState("");
   const [sourceTab, setSourceTab] = useState<"answer" | "conversation">(
@@ -76,9 +80,12 @@ export function ConversationWorkspaceIsland({
     Record<string, "up" | "down" | null>
   >({});
   const [copiedAnswerId, setCopiedAnswerId] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
 
   const guide = resolveWorkspaceGuide(copy, workspace.starterQuestions);
+  const pending = session.operationId !== null;
+  const activeConversationBlocked = session.activeConversationId
+    ? session.blockedConversationIds[session.activeConversationId] === true
+    : false;
 
   useEffect(() => {
     const crampedMedia = window.matchMedia(CRAMPED_QUERY);
@@ -98,21 +105,23 @@ export function ConversationWorkspaceIsland({
     };
   }, []);
 
-  const selectedConversation = workspace.conversations.find(
-    (item) => item.id === activeConversationId,
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
+
+  const selectedConversation = session.conversations.find(
+    (item) => item.id === session.activeConversationId,
   );
-  const sessionKey = activeConversationId ?? NEW_CONVERSATION_ID;
-  const turns = [
-    ...(selectedConversation?.turns ?? []),
-    ...(sessionTurns[sessionKey] ?? []),
-  ];
+  const turns = selectedConversation?.turns ?? [];
   const activeAnswer = getActiveAssistantTurn(turns, activeAnswerId);
   const answerSources = sourcesForIds(
-    workspace.sources,
+    session.sources,
     activeAnswer?.sourceIds ?? [],
   );
   const conversationSources = sourcesForIds(
-    workspace.sources,
+    session.sources,
     getConversationSourceIds(turns),
   );
   const visibleSourceCount =
@@ -170,8 +179,14 @@ export function ConversationWorkspaceIsland({
     }
   }
 
+  function abortActive() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+  }
+
   function selectConversation(id: string) {
-    setActiveConversationId(id);
+    abortActive();
+    dispatch({ type: "select-conversation", conversationId: id });
     setActiveAnswerId(null);
     setSelectedSourceId(null);
     setSourceTab("answer");
@@ -180,7 +195,8 @@ export function ConversationWorkspaceIsland({
   }
 
   function startNewConversation() {
-    setActiveConversationId(null);
+    abortActive();
+    dispatch({ type: "new-conversation" });
     setActiveAnswerId(null);
     setSelectedSourceId(null);
     setSourceTab("answer");
@@ -228,15 +244,25 @@ export function ConversationWorkspaceIsland({
   }
 
   function handleSubmit() {
-    const text = draft.trim();
+    const text = draft;
 
-    if (!text || pending) {
+    if (!text.trim() || pending || activeConversationBlocked) {
       return;
     }
 
-    const nowLabel = "Just now";
-    const userId = `user-${Date.now()}`;
-    const pendingId = `pending-${Date.now()}`;
+    abortActive();
+    operationSeq.current += 1;
+    const operationId = String(operationSeq.current);
+    const abort = new AbortController();
+    abortRef.current = abort;
+
+    const conversationId = session.activeConversationId ?? crypto.randomUUID();
+    const userId = crypto.randomUUID();
+    const assistantId = crypto.randomUUID();
+    const nowLabel = formatClock(locale);
+    const continuationToken = session.activeConversationId
+      ? session.continuationTokens[session.activeConversationId]
+      : undefined;
     const userTurn: ConversationTurn = {
       id: userId,
       role: "user",
@@ -244,7 +270,7 @@ export function ConversationWorkspaceIsland({
       createdAtLabel: nowLabel,
     };
     const pendingTurn: AssistantTurn = {
-      id: pendingId,
+      id: assistantId,
       role: "assistant",
       status: "pending",
       blocks: [],
@@ -253,32 +279,75 @@ export function ConversationWorkspaceIsland({
     };
 
     setDraft("");
-    setPending(true);
-    setSessionTurns((current) => ({
-      ...current,
-      [sessionKey]: [...(current[sessionKey] ?? []), userTurn, pendingTurn],
-    }));
-    setActiveAnswerId(pendingId);
+    setActiveAnswerId(assistantId);
+    dispatch({
+      type: "submit",
+      operationId,
+      conversationId,
+      title: text,
+      happenedAtLabel: nowLabel,
+      userTurn,
+      pendingTurn,
+    });
 
-    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      ? 120
-      : 700;
+    void (async () => {
+      try {
+        const response = await fetch(
+          `/api/topics/${workspace.topicSlug}/conversation-turns`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "text/event-stream",
+            },
+            body: JSON.stringify({
+              question: text,
+              continuationToken,
+            }),
+            signal: abort.signal,
+          },
+        );
 
-    window.setTimeout(() => {
-      const reply: AssistantTurn = {
-        ...workspace.cannedReply,
-        id: pendingId,
-      };
+        if (!response.ok) {
+          dispatch({ type: "error", operationId, retryable: true });
+          return;
+        }
 
-      setSessionTurns((current) => ({
-        ...current,
-        [sessionKey]: (current[sessionKey] ?? []).map((turn) =>
-          turn.id === pendingId ? reply : turn,
-        ),
-      }));
-      setActiveAnswerId(pendingId);
-      setPending(false);
-    }, delay);
+        await readConversationTurnStream(
+          response,
+          {
+            onConversation: (token) => {
+              dispatch({
+                type: "conversation",
+                operationId,
+                continuationToken: token,
+              });
+            },
+            onToken: (delta) => {
+              dispatch({ type: "token", operationId, delta });
+            },
+            onFinal: (payload) => {
+              dispatch({ type: "final", operationId, payload });
+            },
+            onError: (retryableBeforeAcceptance) => {
+              dispatch({
+                type: "error",
+                operationId,
+                retryable:
+                  retryableBeforeAcceptance && continuationToken === undefined,
+              });
+            },
+          },
+          abort.signal,
+        );
+      } catch (error) {
+        if (abort.signal.aborted || isAbortError(error)) {
+          return;
+        }
+
+        dispatch({ type: "error", operationId, retryable: false });
+      }
+    })();
   }
 
   function renderHistory(
@@ -292,8 +361,8 @@ export function ConversationWorkspaceIsland({
         searchInputId={searchInputId}
         exploreItemIds={workspace.exploreItemIds}
         exploreLabels={identity.exploreItems}
-        conversations={workspace.conversations}
-        activeConversationId={activeConversationId}
+        conversations={session.conversations}
+        activeConversationId={session.activeConversationId}
         search={search}
         onSearchChange={setSearch}
         onSelectConversation={selectConversation}
@@ -370,7 +439,7 @@ export function ConversationWorkspaceIsland({
                 locale={locale}
                 copy={copy}
                 turns={turns}
-                catalog={workspace.sources}
+                catalog={session.sources}
                 starters={workspace.starterQuestions}
                 activeAnswerId={activeAnswer?.id ?? null}
                 selectedSourceId={selectedSourceId}
@@ -392,7 +461,7 @@ export function ConversationWorkspaceIsland({
               copy={copy}
               placeholder={identity.composerPlaceholder}
               value={draft}
-              disabled={pending}
+              disabled={pending || activeConversationBlocked}
               onChange={setDraft}
               onSubmit={handleSubmit}
             />
@@ -453,4 +522,17 @@ export function ConversationWorkspaceIsland({
       </dialog>
     </div>
   );
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException
+    ? error.name === "AbortError"
+    : error instanceof Error && error.name === "AbortError";
+}
+
+function formatClock(locale: Locale): string {
+  return new Intl.DateTimeFormat(locale === "bn" ? "bn-BD" : "en-GB", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date());
 }

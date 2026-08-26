@@ -14,7 +14,7 @@ Ask / inspect citations
 
 ## Contract
 
-A Topic is a **product** concept. An APE Project is a **knowledge/RAG** boundary. They stay separate. This module does not store APE ids yet.
+A Topic is a **product** concept. An APE Project is a **knowledge/RAG** boundary. They stay separate. Project UUIDs live in server env mapping (`topic-ape-project-mapping.server.ts`), not on `Topic`.
 
 ```ts
 type Topic = {
@@ -74,6 +74,7 @@ src/features/topics/
   get-published-topics.ts
   get-topic-by-slug.ts
   topic-presentation.ts
+  topic-ape-project-mapping.server.ts
 ```
 
 `/topics/[slug]` is the **conversation workspace** (see `docs/features/conversations_feature.md`). Unknown slugs call `notFound()`. The Topic type is unchanged.

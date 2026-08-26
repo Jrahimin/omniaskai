@@ -76,6 +76,7 @@ export type ConversationCopy = {
   pendingLabel: string;
   errorTitle: string;
   errorBody: string;
+  retryableErrorBody: string;
   closeSources: string;
   openSources: string;
   composerLanguage: string;
@@ -297,12 +298,14 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     pendingLabel: "Looking through sources…",
     errorTitle: "This answer could not be shown",
     errorBody:
-      "Something went wrong while preparing this reply. Try another question, or start a new conversation.",
+      "Something went wrong while preparing this reply. Start a new conversation, then ask again.",
+    retryableErrorBody:
+      "The question was not accepted. You can try again here or start a new conversation.",
     closeSources: "Close sources",
     openSources: "Open sources",
     composerLanguage: "Reply language",
     composerLanguageHint:
-      "Preferred language for the answer — Auto, English, Bangla, or Banglish. Does not change the page language.",
+      "Answers follow the question language. Explicit English, Bangla, or Banglish control comes later.",
     languageAuto: "Auto",
     languageEn: "EN",
     languageBn: "বাং",
@@ -390,12 +393,14 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     pendingLabel: "উৎস দেখা হচ্ছে…",
     errorTitle: "এই উত্তর দেখানো যায়নি",
     errorBody:
-      "উত্তর তৈরি করতে গিয়ে সমস্যা হয়েছে। অন্য একটি প্রশ্ন করুন, অথবা নতুন আলোচনা শুরু করুন।",
+      "উত্তর তৈরি করতে গিয়ে সমস্যা হয়েছে। নতুন আলোচনা শুরু করে আবার জিজ্ঞাসা করুন।",
+    retryableErrorBody:
+      "প্রশ্নটি গ্রহণ করা হয়নি। এখানেই আবার চেষ্টা করুন, অথবা নতুন আলোচনা শুরু করুন।",
     closeSources: "উৎস বন্ধ করুন",
     openSources: "উৎস খুলুন",
     composerLanguage: "উত্তরের ভাষা",
     composerLanguageHint:
-      "উত্তর কোন ভাষায় চাই — স্বয়ং, ইংরেজি, বাংলা বা বাংলিশ। পাতার ভাষা বদলায় না।",
+      "উত্তর প্রশ্নের ভাষা অনুসরণ করে। ইংরেজি, বাংলা বা বাংলিশ বেছে নেওয়া পরে আসবে।",
     languageAuto: "স্বয়ং",
     languageEn: "EN",
     languageBn: "বাং",
