@@ -152,4 +152,23 @@ describe("workspaceSessionReducer", () => {
     expect(assistant.sourceProvenance).toBe("none");
     expect(final.operationId).toBeNull();
   });
+
+  it("keeps a completed answer without treating it as grounded", () => {
+    const final = workspaceSessionReducer(submitState(), {
+      type: "final",
+      operationId: "1",
+      payload: {
+        status: "completed",
+        blocks: [{ type: "paragraph", text: "Hello — ask whenever you are ready." }],
+        sources: [],
+        sourceIds: [],
+        sourceProvenance: "none",
+        followUps: [],
+      },
+    });
+    const assistant = final.conversations[0]?.turns[1] as AssistantTurn;
+
+    expect(assistant.status).toBe("completed");
+    expect(assistant.sourceIds).toEqual([]);
+  });
 });

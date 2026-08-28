@@ -244,7 +244,9 @@ Page-session history only; Auto reply language
 
 APE integration:
 Create + stream message; citations, provenance, insufficient,
-and conversational completed answers mapped into existing UI
+grounded, and completed answers mapped into existing UI
+Displayed text strips [n] markers; token deltas are batched
+Failed APE HTTP calls log status and request/trace ids server-side
 
 Admin / public auth / subscriptions:
 Not implemented yet

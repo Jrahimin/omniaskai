@@ -2,6 +2,7 @@ import "server-only";
 
 import type { ApeRuntimeConfig } from "./ape-config.server";
 import type { ApeEnvelope } from "./ape-stream-events";
+import { logApeHttpFailure, logApeUpstreamFailure } from "./ape-upstream-log";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -11,29 +12,47 @@ export async function createApeConversation(
   projectId: string,
   signal: AbortSignal,
 ): Promise<string | undefined> {
-  const response = await fetch(
-    `${config.baseUrl}/api/v1/projects/${projectId}/conversations`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.orgKey}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ title: null }),
-      cache: "no-store",
-      signal,
-    },
-  );
+  let response: Response;
 
-  if (!response.ok) {
+  try {
+    response = await fetch(
+      `${config.baseUrl}/api/v1/projects/${projectId}/conversations`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.orgKey}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ title: null }),
+        cache: "no-store",
+        signal,
+      },
+    );
+  } catch {
+    logApeUpstreamFailure("create_conversation");
     return undefined;
   }
 
-  const envelope = (await response.json()) as ApeEnvelope<{ id?: string }>;
-  const id = envelope.success === true ? envelope.data?.id : undefined;
+  if (!response.ok) {
+    logApeHttpFailure("create_conversation", response);
+    return undefined;
+  }
 
-  return typeof id === "string" && UUID_PATTERN.test(id) ? id : undefined;
+  try {
+    const envelope = (await response.json()) as ApeEnvelope<{ id?: string }>;
+    const id = envelope.success === true ? envelope.data?.id : undefined;
+
+    if (typeof id === "string" && UUID_PATTERN.test(id)) {
+      return id;
+    }
+  } catch {
+    logApeHttpFailure("create_conversation", response);
+    return undefined;
+  }
+
+  logApeHttpFailure("create_conversation", response);
+  return undefined;
 }
 
 export async function streamApeMessage(

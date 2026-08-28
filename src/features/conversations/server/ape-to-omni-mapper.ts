@@ -1,3 +1,4 @@
+import { stripCitationMarkers } from "../citation-markers";
 import type {
   AnswerBlock,
   ConversationSource,
@@ -18,7 +19,7 @@ export function mapApeDoneToFinal(
   const sourceProvenance = done.source_provenance;
 
   if (done.insufficient_evidence_reason) {
-    const trimmed = content.trim();
+    const trimmed = stripCitationMarkers(content);
     const breakIndex = trimmed.indexOf("\n");
     const title =
       breakIndex === -1 ? trimmed : trimmed.slice(0, breakIndex).trim();
@@ -52,7 +53,7 @@ export function mapApeDoneToFinal(
   );
 
   return {
-    status: "grounded",
+    status: done.grounded === true ? "grounded" : "completed",
     blocks,
     sources,
     sourceIds: sources.map((source) => source.id),
@@ -114,13 +115,14 @@ function mapCitation(
       return undefined;
     }
 
+    const hostname = hostnameOf(href);
+
     return {
       id,
       index,
       title: title ?? href ?? "Web source",
-      shortLabel: hostnameOf(href) ?? shorten(title ?? "Web"),
-      publisher: present(citation.web_provider),
-      year: yearFromDate(citation.web_retrieved_at),
+      shortLabel: hostname ?? shorten(title ?? "Web"),
+      publisher: hostname,
       excerpt: present(citation.excerpt),
       href,
       kind: "web",
@@ -177,7 +179,7 @@ function mapContentBlocks(
 
     return {
       type: "paragraph" as const,
-      text,
+      text: stripCitationMarkers(text),
       citationIds: citationIds.length > 0 ? citationIds : undefined,
     };
   });

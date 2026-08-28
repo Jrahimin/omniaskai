@@ -7,6 +7,7 @@ import {
   asApeDoneEvent,
   tokenDeltaFrom,
 } from "./ape-stream-events";
+import { logApeHttpFailure } from "./ape-upstream-log";
 
 export type ConversationTurnClientEvent =
   | { event: "conversation"; data: { continuationToken: string } }
@@ -59,10 +60,19 @@ export async function runConversationTurn(
       return;
     }
   } else {
-    apeConversationId = await input.gateway.createConversation(
-      input.projectId,
-      input.signal,
-    );
+    try {
+      apeConversationId = await input.gateway.createConversation(
+        input.projectId,
+        input.signal,
+      );
+    } catch {
+      if (input.signal.aborted) {
+        return;
+      }
+
+      input.emit({ event: "error", data: {} });
+      return;
+    }
 
     if (!apeConversationId) {
       input.emit({ event: "error", data: {} });
@@ -96,6 +106,10 @@ export async function runConversationTurn(
   }
 
   if (!response.ok || !response.body) {
+    if (!response.ok) {
+      logApeHttpFailure("stream_message", response);
+    }
+
     input.emit({ event: "error", data: {} });
     return;
   }

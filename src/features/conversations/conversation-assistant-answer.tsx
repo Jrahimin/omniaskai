@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { Locale } from "@/lib/locale/locale";
 
+import { stripCitationMarkers } from "./citation-markers";
 import type {
   AnswerListIcon,
   AssistantTurn,
@@ -72,7 +73,9 @@ export function ConversationAssistantAnswer({
 
   if (turn.status === "streaming") {
     const text =
-      turn.blocks[0]?.type === "paragraph" ? turn.blocks[0].text : "";
+      turn.blocks[0]?.type === "paragraph"
+        ? stripCitationMarkers(turn.blocks[0].text)
+        : "";
 
     if (!text) {
       return <PendingAnswer copy={copy} />;

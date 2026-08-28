@@ -51,6 +51,7 @@ export type UserTurn = {
 
 export type AssistantStatus =
   | "grounded"
+  | "completed"
   | "insufficient"
   | "error"
   | "pending"
@@ -80,7 +81,7 @@ export type Conversation = {
 };
 
 export type ConversationTurnFinal = {
-  status: "grounded" | "insufficient";
+  status: "grounded" | "completed" | "insufficient";
   blocks: AnswerBlock[];
   sources: ConversationSource[];
   sourceIds: string[];

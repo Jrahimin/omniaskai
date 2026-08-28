@@ -50,10 +50,11 @@ Questions are sent to APE unchanged. Reply language is Auto only. APE Project `r
 | APE outcome | UI |
 | --- | --- |
 | `insufficient_evidence_reason` present | insufficient, no “From sources” |
+| `grounded === true` | grounded; “From sources” only when citations exist |
+| otherwise | completed; never “From sources” |
 | stream / upstream failure | generic error |
-| otherwise | completed answer |
 
-Completed answers include conversational replies with `grounded=false`, `source_provenance=none`, and no citations.
+Completed answers include conversational replies and other non-grounded finals (`grounded=false`), even when web citations are present.
 
 `source_provenance` is passed through as `knowledge | web | knowledge_and_web | none`. The UI does not infer origin from answer text.
 
@@ -62,9 +63,10 @@ Completed answers include conversational replies with `grounded=false`, `source_
 Evidence still lives on the **assistant turn**.
 
 - Knowledge and web citations map into the existing source cards
-- Web sources use the real `web_url` for **View source**
-- Web search provider metadata comes from APE `web_provider`
+- Web sources use the real `web_url` for **View source** and the URL hostname as the visible publisher/label
+- Web search provider and retrieval timestamps stay off the source card
 - Citation ids are scoped per completed answer so each APE snapshot keeps its own metadata
+- Displayed answer text drops raw `[1]` / `[2]` markers; claim matching still uses the raw APE text
 - Knowledge publisher/year/locator/href stay omitted when APE does not send them
 - Claim chips appear only for an exact, unambiguous claim match with a valid `citation_index`
 - **In this answer** = active turn’s `sourceIds`
@@ -72,7 +74,7 @@ Evidence still lives on the **assistant turn**.
 
 ## Client
 
-One island owns drawers, rails, and a reducer/state machine for conversations, turns, operation id, continuation token, and pending/streaming/final/error. Stale stream events are ignored. Submit is disabled while a turn is open. There is no Stop control.
+One island owns drawers, rails, and a reducer/state machine for conversations, turns, operation id, continuation token, and pending/streaming/final/error. Token deltas are batched to one UI update per animation frame (or ~40ms). Stale stream events are ignored. Submit is disabled while a turn is open. There is no Stop control.
 
 Retry is only for failures proven to be before APE accepted work (validation or create failure). After create-success/message-failure or an ambiguous transport failure, that local conversation is blocked from further submission and the user starts a new conversation rather than resending.
 
@@ -105,7 +107,7 @@ Unchanged from Phase 1C: history rail, compact topic band, conversation, sources
 - No persistence; APE may keep orphaned conversations
 - Disconnect/abort is cleanup only and may not cancel committed APE work
 - No automatic retry of message turns
-- Generic stream errors only
+- Generic stream errors only; failed APE HTTP calls log status and request/trace ids server-side
 - No generated follow-ups
 - Internal pilot protection is deployment-level (Cloudflare Access or equivalent), not product auth
 

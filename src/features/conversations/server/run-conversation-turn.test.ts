@@ -95,8 +95,18 @@ describe("runConversationTurn", () => {
 
   it("emits conversation then error when create succeeds and the stream fails", async () => {
     const { events, emit } = collectEvents();
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const createConversation = vi.fn(async () => "conv-1");
-    const streamMessage = vi.fn(async () => new Response(null, { status: 503 }));
+    const streamMessage = vi.fn(
+      async () =>
+        new Response(null, {
+          status: 503,
+          headers: {
+            "X-Request-ID": "req-503",
+            "X-Trace-ID": "trace-503",
+          },
+        }),
+    );
 
     await runConversationTurn({
       topicId: "topic_income_tax",
@@ -114,6 +124,39 @@ describe("runConversationTurn", () => {
       "conversation",
       "error",
     ]);
+    expect(JSON.stringify(events.at(-1))).not.toContain("req-503");
+    expect(errorSpy).toHaveBeenCalledWith(
+      "APE upstream request failed",
+      expect.objectContaining({
+        operation: "stream_message",
+        status: 503,
+        requestId: "req-503",
+        traceId: "trace-503",
+      }),
+    );
+    errorSpy.mockRestore();
+  });
+
+  it("emits a generic error when conversation create throws", async () => {
+    const { events, emit } = collectEvents();
+
+    await runConversationTurn({
+      topicId: "topic_income_tax",
+      projectId: "660e8400-e29b-41d4-a716-446655440001",
+      question: "What is taxable?",
+      signal: new AbortController().signal,
+      gateway: {
+        createConversation: vi.fn(async () => {
+          throw new Error("upstream down");
+        }),
+        streamMessage: vi.fn(),
+      },
+      tokens,
+      emit,
+    });
+
+    expect(events).toEqual([{ event: "error", data: {} }]);
+    expect(JSON.stringify(events)).not.toContain("upstream down");
   });
 
   it("does not create a conversation for a tampered continuation token", async () => {

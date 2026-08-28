@@ -1,5 +1,6 @@
 import type { ConversationTurnFinal } from "./conversation";
 import { readDecodedSse } from "./conversation-sse";
+import { createTokenDeltaBatcher } from "./conversation-token-batcher";
 
 export type BrowserTurnHandlers = {
   onConversation: (continuationToken: string) => void;
@@ -20,6 +21,7 @@ export async function readConversationTurnStream(
 
   let settled = false;
   let conversationIssued = false;
+  const tokens = createTokenDeltaBatcher(handlers.onToken);
 
   await readDecodedSse(
     response.body,
@@ -52,7 +54,7 @@ export async function readConversationTurnStream(
             : undefined;
 
         if (typeof delta === "string") {
-          handlers.onToken(delta);
+          tokens.push(delta);
         }
 
         return;
@@ -60,6 +62,7 @@ export async function readConversationTurnStream(
 
       if (frame.event === "final") {
         settled = true;
+        tokens.flush();
 
         if (isMappedFinal(frame.data)) {
           handlers.onFinal(frame.data);
@@ -72,11 +75,14 @@ export async function readConversationTurnStream(
 
       if (frame.event === "error") {
         settled = true;
+        tokens.flush();
         handlers.onError(!conversationIssued);
       }
     },
     signal,
   );
+
+  tokens.flush();
 
   if (!settled && !signal?.aborted) {
     handlers.onError(false);
@@ -90,7 +96,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isMappedFinal(value: unknown): value is ConversationTurnFinal {
   return (
     isRecord(value) &&
-    (value.status === "grounded" || value.status === "insufficient") &&
+    (value.status === "grounded" ||
+      value.status === "completed" ||
+      value.status === "insufficient") &&
     Array.isArray(value.blocks) &&
     Array.isArray(value.sources) &&
     Array.isArray(value.sourceIds)
