@@ -187,11 +187,11 @@ Key principles:
 omniaskai/
 ├── public/                  # brand, landing, topic artwork
 ├── src/
-│   ├── app/                 # layout, landing, /topics/[slug] workspace
+│   ├── app/                 # layout, landing, /topics/[slug], conversation BFF
 │   ├── features/
 │   │   ├── landing/         # marketing landing, EN/BN copy
-│   │   ├── topics/          # Topic catalog, presentation, read helpers
-│   │   └── conversations/   # topic workspace UI + static fixtures
+│   │   ├── topics/          # Topic catalog, presentation, APE Project mapping
+│   │   └── conversations/   # workspace UI + server APE stream boundary
 │   └── lib/locale/          # cookie locale + language switch
 ├── docs/
 │   ├── project_plan.md
@@ -212,6 +212,8 @@ omniaskai/
 * APE remains the only RAG/AI infrastructure layer.
 * APE credentials are server-side only.
 * Topic and APE Project remain separate concepts.
+* Topic → APE Project mapping is server env, not a Topic field.
+* APE credentials and raw conversation ids stay server-side; the browser holds only a sealed continuation token.
 * Topic behavior should be configuration-driven where practical.
 * Public discovery and SEO are important product concerns.
 * Prefer simple, explicit architecture over premature complexity.
@@ -224,23 +226,27 @@ omniaskai/
 
 ```text
 Current state:
-Phase 1C topic conversation workspace is in place
-(static fixtures, compact topic band, editorial answers,
-citation→source loop, first-time guide, mock composer)
+Phase 1D real APE integration is in place
+(server-only APE client, Topic→Project mapping,
+encrypted continuation token, SSE BFF, session-only history)
 
 Current focus:
-Phase 1 Step 4 — real APE integration
+Internal pilot of the live conversation loop
 
 Topic data:
 Static sample module in src/features/topics/
 (four published topics; presentation map for artwork/mood)
+APE Project UUIDs live in server env mapping, not on Topic
 
 Workspace:
-Static fixtures in src/features/conversations/
-(same shell for all topics; no streaming)
+Live streaming through /api/topics/[slug]/conversation-turns
+Page-session history only; Auto reply language
 
 APE integration:
-Not started
+Create + stream message; citations, provenance, insufficient,
+grounded, and completed answers mapped into existing UI
+Displayed text strips [n] markers; token deltas are batched
+Failed APE HTTP calls log status and request/trace ids server-side
 
 Admin / public auth / subscriptions:
 Not implemented yet

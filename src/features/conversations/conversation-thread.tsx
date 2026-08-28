@@ -73,7 +73,12 @@ export function ConversationThread({
 
   const latestAssistantId = [...turns]
     .reverse()
-    .find((turn) => isAssistantTurn(turn) && turn.status !== "pending")?.id;
+    .find(
+      (turn) =>
+        isAssistantTurn(turn) &&
+        turn.status !== "pending" &&
+        turn.status !== "streaming",
+    )?.id;
 
   return (
     <div className="mx-auto flex w-full max-w-[40rem] flex-col gap-6">

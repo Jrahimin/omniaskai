@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { Locale } from "@/lib/locale/locale";
 
+import { stripCitationMarkers } from "./citation-markers";
 import type {
   AnswerListIcon,
   AssistantTurn,
@@ -67,14 +68,23 @@ export function ConversationAssistantAnswer({
   onHelpful,
 }: ConversationAssistantAnswerProps) {
   if (turn.status === "pending") {
+    return <PendingAnswer copy={copy} />;
+  }
+
+  if (turn.status === "streaming") {
+    const text =
+      turn.blocks[0]?.type === "paragraph"
+        ? stripCitationMarkers(turn.blocks[0].text)
+        : "";
+
+    if (!text) {
+      return <PendingAnswer copy={copy} />;
+    }
+
     return (
       <article className="workspace-answer px-1 py-2">
-        <p className="text-muted text-[0.78rem]">{copy.pendingLabel}</p>
-        <div className="mt-3 flex flex-col gap-2">
-          <div className="workspace-pending-bar w-[88%]" />
-          <div className="workspace-pending-bar w-[72%]" />
-          <div className="workspace-pending-bar w-[64%]" />
-        </div>
+        <AnswerIdentity copy={copy} showCue={false} />
+        <p className="workspace-answer-copy mt-3">{text}</p>
       </article>
     );
   }
@@ -85,7 +95,7 @@ export function ConversationAssistantAnswer({
         <AnswerIdentity copy={copy} showCue={false} />
         <h2 className="mt-3 text-[1.02rem] font-semibold">{copy.errorTitle}</h2>
         <p className="text-muted mt-1.5 text-[0.9rem] leading-relaxed">
-          {copy.errorBody}
+          {turn.retryable ? copy.retryableErrorBody : copy.errorBody}
         </p>
       </article>
     );
@@ -204,9 +214,11 @@ export function ConversationAssistantAnswer({
               className="rounded-xl bg-[#fbf6ee] px-3.5 py-3"
             >
               <p className="text-[0.92rem] font-semibold">{block.title}</p>
-              <p className="text-muted mt-1.5 text-[0.86rem] leading-relaxed">
-                {block.body}
-              </p>
+              {block.body ? (
+                <p className="text-muted mt-1.5 text-[0.86rem] leading-relaxed">
+                  {block.body}
+                </p>
+              ) : null}
             </aside>
           );
         })}
@@ -250,6 +262,19 @@ export function ConversationAssistantAnswer({
           <SourcesMarkIcon className="size-3.5" />
           {sourcesLabel}
         </button>
+      </div>
+    </article>
+  );
+}
+
+function PendingAnswer({ copy }: { copy: ConversationCopy }) {
+  return (
+    <article className="workspace-answer px-1 py-2">
+      <p className="text-muted text-[0.78rem]">{copy.pendingLabel}</p>
+      <div className="mt-3 flex flex-col gap-2">
+        <div className="workspace-pending-bar w-[88%]" />
+        <div className="workspace-pending-bar w-[72%]" />
+        <div className="workspace-pending-bar w-[64%]" />
       </div>
     </article>
   );

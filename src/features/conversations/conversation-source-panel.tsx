@@ -164,18 +164,28 @@ function SourceCard({
           <span className="block text-[0.8rem] leading-snug font-semibold">
             {source.title}
           </span>
-          <span className="text-muted mt-0.5 block text-[0.68rem]">
-            {source.publisher}
-            {selected && source.year ? ` · ${source.year}` : ""}
-            {selected ? ` · ${source.locator}` : ""}
-          </span>
+          {source.publisher ||
+          (selected && source.year) ||
+          (selected && source.locator) ? (
+            <span className="text-muted mt-0.5 block text-[0.68rem]">
+              {[
+                source.publisher,
+                selected ? source.year : undefined,
+                selected ? source.locator : undefined,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          ) : null}
         </span>
       </button>
       {selected ? (
         <>
-          <p className="text-muted mt-2 pl-7 text-[0.74rem] leading-relaxed">
-            {source.excerpt}
-          </p>
+          {source.excerpt ? (
+            <p className="text-muted mt-2 pl-7 text-[0.74rem] leading-relaxed">
+              {source.excerpt}
+            </p>
+          ) : null}
           {source.href ? (
             <a
               href={source.href}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 import type { ConversationCopy } from "./conversation-language";
 import { SendIcon } from "./conversation-icons";
@@ -22,7 +22,6 @@ export function ConversationComposer({
   onChange,
   onSubmit,
 }: ConversationComposerProps) {
-  const [language, setLanguage] = useState("auto");
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const canSend = value.trim().length > 0 && !disabled;
 
@@ -75,15 +74,12 @@ export function ConversationComposer({
           </label>
           <select
             id="composer-language"
-            value={language}
+            value="auto"
+            disabled
             title={copy.composerLanguageHint}
-            onChange={(event) => setLanguage(event.target.value)}
-            className="text-muted focus-visible:outline-brand max-w-[4.6rem] cursor-pointer bg-transparent py-1 text-[0.68rem] font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="text-muted max-w-[4.6rem] cursor-not-allowed bg-transparent py-1 text-[0.68rem] font-medium outline-none"
           >
             <option value="auto">{copy.languageAuto}</option>
-            <option value="en">{copy.languageEn}</option>
-            <option value="bn">{copy.languageBn}</option>
-            <option value="banglish">{copy.languageBanglish}</option>
           </select>
           <button
             type="submit"
