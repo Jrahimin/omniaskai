@@ -36,3 +36,19 @@ export function formatSourcesCount(
 ): string {
   return template.replace("{n}", formatLocalizedCount(count, locale));
 }
+
+export function formatEvidenceCounts(
+  sourceCount: number,
+  referenceCount: number,
+  template: string,
+  sourcesTemplate: string,
+  referencesTemplate: string,
+  locale: Locale,
+): string {
+  return template
+    .replace("{sources}", formatSourcesCount(sourceCount, sourcesTemplate, locale))
+    .replace(
+      "{references}",
+      formatSourcesCount(referenceCount, referencesTemplate, locale),
+    );
+}

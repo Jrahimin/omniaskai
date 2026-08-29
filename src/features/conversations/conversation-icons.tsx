@@ -121,11 +121,16 @@ export function SendIcon({ className }: IconProps) {
   return (
     <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className={className}>
       <path
-        d="M8 12.5V3.5M4.5 7 8 3.5 11.5 7"
+        d="M2.6 8.1 13.2 3.4 9.1 13.1 7.4 9.1 2.6 8.1Z"
         stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
+        strokeWidth="1.4"
         strokeLinejoin="round"
+      />
+      <path
+        d="M7.4 9.1 13.2 3.4"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -545,6 +550,53 @@ export function ScenariosIcon({ className }: IconProps) {
         stroke="currentColor"
         strokeWidth="1.3"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function ChevronIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className={className}>
+      <path
+        d="M4.4 6.4 8 10l3.6-3.6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function ShieldIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className={className}>
+      <path
+        d="M8 2.3 3.4 4.2v3.4c0 2.9 1.9 4.8 4.6 6.1 2.7-1.3 4.6-3.2 4.6-6.1V4.2L8 2.3Z"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function FileDocIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className={className}>
+      <path
+        d="M4.2 2.8h5.2L12 5.6v7.6H4.2V2.8Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.4 2.8V5.6H12M6 8.2h4M6 10.4h2.8"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

@@ -7,7 +7,7 @@ import type {
 import { isAssistantTurn, isUserTurn } from "./conversation";
 import { ConversationAssistantAnswer } from "./conversation-assistant-answer";
 import type { ConversationCopy } from "./conversation-language";
-import { SparkSmallIcon } from "./conversation-icons";
+import { CheckSmallIcon, SparkSmallIcon } from "./conversation-icons";
 
 type ConversationThreadProps = {
   locale: Locale;
@@ -44,7 +44,7 @@ export function ConversationThread({
 }: ConversationThreadProps) {
   if (turns.length === 0) {
     return (
-      <div className="mx-auto flex max-w-[40rem] flex-col justify-center px-1 py-8">
+      <div className="workspace-thread-inner mx-auto flex max-w-[46rem] flex-col justify-center px-1 py-8">
         <h2 className="text-[1.15rem] font-semibold tracking-tight">
           {copy.emptyTitle}
         </h2>
@@ -60,7 +60,7 @@ export function ConversationThread({
               <button
                 type="button"
                 onClick={() => onFollowUp(starter)}
-                className="border-border hover:border-[color-mix(in_srgb,var(--workspace-accent)_35%,var(--border))] w-full cursor-pointer rounded-2xl border bg-white px-3.5 py-2.5 text-left text-[0.88rem] leading-snug"
+                className="workspace-starter-chip w-full cursor-pointer px-3.5 py-2.5 text-left text-[0.88rem] leading-snug"
               >
                 {starter}
               </button>
@@ -81,18 +81,19 @@ export function ConversationThread({
     )?.id;
 
   return (
-    <div className="mx-auto flex w-full max-w-[40rem] flex-col gap-6">
-      {turns.map((turn) => {
+    <div className="workspace-thread-inner mx-auto flex w-full max-w-[46rem] flex-col gap-5">
+      {turns.map((turn, index) => {
         if (isUserTurn(turn)) {
           return (
             <div key={turn.id} className="flex justify-end">
-              <div className="max-w-[28rem]">
-                <p className="text-muted mb-0.5 text-right text-[0.65rem]">
+              <div className="max-w-[min(28rem,88%)]">
+                <p className="text-muted mb-1 text-right text-[0.65rem]">
                   {copy.you} · {turn.createdAtLabel}
                 </p>
-                <p className="text-right text-[0.88rem] leading-snug text-[#3a404a]">
-                  {turn.text}
-                </p>
+                <div className="flex items-end justify-end gap-1.5">
+                  <p className="workspace-user-bubble">{turn.text}</p>
+                  <CheckSmallIcon className="text-[var(--workspace-accent)] mb-0.5 size-3.5 shrink-0" />
+                </div>
               </div>
             </div>
           );
@@ -102,6 +103,10 @@ export function ConversationThread({
           return null;
         }
 
+        const previous = turns[index - 1];
+        const createdAtLabel =
+          previous && isUserTurn(previous) ? previous.createdAtLabel : undefined;
+
         return (
           <div key={turn.id} className="flex flex-col gap-3">
             <ConversationAssistantAnswer
@@ -109,6 +114,7 @@ export function ConversationThread({
               copy={copy}
               turn={turn}
               catalog={catalog}
+              createdAtLabel={createdAtLabel}
               selectedSourceId={
                 activeAnswerId === turn.id ? selectedSourceId : null
               }
@@ -154,9 +160,9 @@ function FollowUps({
             <button
               type="button"
               onClick={() => onSelect(item)}
-              className="border-border hover:border-[color-mix(in_srgb,var(--workspace-accent)_40%,var(--border))] inline-flex max-w-full cursor-pointer items-start gap-1.5 rounded-2xl border bg-white px-3 py-2 text-left text-[0.8rem] leading-snug"
+              className="workspace-starter-chip inline-flex max-w-full cursor-pointer items-start gap-1.5 px-3 py-2 text-left text-[0.8rem] leading-snug"
             >
-              <SparkSmallIcon className="text-[var(--workspace-accent)] mt-0.5 size-3.5 shrink-0" />
+              <SparkSmallIcon className="text-brand mt-0.5 size-3.5 shrink-0" />
               <span>{item}</span>
             </button>
           </li>

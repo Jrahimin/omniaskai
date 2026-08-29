@@ -60,7 +60,7 @@ export function ConversationHistorySidebar({
 }: ConversationHistorySidebarProps) {
   if (collapsed) {
     return (
-      <div className="flex h-full min-h-0 flex-col items-center bg-[#f7f8fb] py-3">
+      <div className="flex h-full min-h-0 flex-col items-center py-3">
         <Link href="/" aria-label="OmniAskAI" className="flex size-9 items-center justify-center">
           <Image
             src="/brand/omniaskai-logo.png"
@@ -73,7 +73,7 @@ export function ConversationHistorySidebar({
         <button
           type="button"
           onClick={onNewConversation}
-          className="bg-brand-soft text-brand mt-3 inline-flex size-9 cursor-pointer items-center justify-center rounded-full"
+          className="bg-brand text-surface mt-3 inline-flex size-9 cursor-pointer items-center justify-center rounded-full"
           aria-label={copy.newConversation}
         >
           <PlusIcon className="size-3.5" />
@@ -99,7 +99,7 @@ export function ConversationHistorySidebar({
   const previous = visible.filter((item) => item.bucket === "previous7Days");
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#f7f8fb]">
+    <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-center gap-2 px-3 pt-3 pb-2">
         <Link href="/" className="flex min-w-0 flex-1 items-center gap-2">
           <Image
@@ -130,7 +130,7 @@ export function ConversationHistorySidebar({
         <button
           type="button"
           onClick={onNewConversation}
-          className="bg-brand-soft text-brand flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8rem] font-semibold"
+          className="bg-brand text-surface flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[0.8rem] font-semibold shadow-[0_6px_16px_rgba(84,87,238,0.2)]"
         >
           <PlusIcon className="size-3.5" />
           {copy.newConversation}
@@ -155,7 +155,7 @@ export function ConversationHistorySidebar({
 
       <nav
         aria-label={copy.searchLabel}
-        className="min-h-0 flex-1 overflow-y-auto px-2 pb-3"
+        className="workspace-pane-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-3"
       >
         {query && visible.length === 0 ? (
           <p className="text-muted px-2 py-3 text-[0.78rem]">
@@ -245,10 +245,20 @@ function HistoryBucket({
                 type="button"
                 onClick={() => onSelect(item.id)}
                 aria-current={current ? "true" : undefined}
-                className="workspace-history-item hover:bg-white/80 flex w-full cursor-pointer items-start justify-between gap-2 rounded-lg px-2 py-1.5 text-left"
+                className="workspace-history-item hover:bg-white/70 flex w-full cursor-pointer items-start justify-between gap-2 rounded-lg px-2 py-1.5 text-left"
               >
-                <span className="text-foreground line-clamp-2 text-[0.76rem] leading-snug">
-                  {item.title}
+                <span className="flex min-w-0 items-start gap-2">
+                  <span
+                    className={`mt-1.5 size-1.5 shrink-0 rounded-full ${
+                      current
+                        ? "bg-[var(--workspace-accent)]"
+                        : "bg-transparent"
+                    }`}
+                    aria-hidden="true"
+                  />
+                  <span className="text-foreground line-clamp-2 text-[0.76rem] leading-snug">
+                    {item.title}
+                  </span>
                 </span>
                 <span className="text-muted shrink-0 pt-0.5 text-[0.62rem]">
                   {item.happenedAtLabel}

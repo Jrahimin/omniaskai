@@ -37,7 +37,7 @@ export function ConversationComposer({
   }, [value]);
 
   return (
-    <div className="px-3 pb-2.5 min-[1024px]:px-4">
+    <div className="workspace-composer-dock px-4 pb-3 min-[1024px]:px-6">
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -45,7 +45,7 @@ export function ConversationComposer({
             onSubmit();
           }
         }}
-        className="border-border flex items-end gap-2 rounded-[1.15rem] border bg-white px-2.5 py-1.5 shadow-[0_8px_24px_rgba(22,28,48,0.06)]"
+        className="workspace-composer-bar mx-auto flex max-w-[46rem] items-end gap-2 px-3 py-1.5"
       >
         <label className="sr-only" htmlFor="workspace-composer">
           {placeholder}
@@ -66,7 +66,7 @@ export function ConversationComposer({
               }
             }
           }}
-          className="text-foreground max-h-[8.5rem] min-h-[2.15rem] w-full resize-none bg-transparent px-1 py-1.5 text-[0.88rem] leading-relaxed outline-none placeholder:text-[#8b909c]"
+          className="text-foreground max-h-[8.5rem] min-h-[2.25rem] w-full resize-none bg-transparent px-1 py-1.5 text-[0.88rem] leading-relaxed outline-none placeholder:text-[#8b909c]"
         />
         <div className="mb-0.5 flex shrink-0 items-center gap-1">
           <label className="sr-only" htmlFor="composer-language">
@@ -85,7 +85,7 @@ export function ConversationComposer({
             type="submit"
             disabled={!canSend}
             aria-label={copy.send}
-            className="bg-brand text-surface inline-flex size-8 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-45"
+            className="bg-brand text-surface inline-flex size-8 cursor-pointer items-center justify-center rounded-full shadow-[0_6px_14px_rgba(84,87,238,0.28)] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
           >
             <SendIcon className="size-3.5" />
           </button>

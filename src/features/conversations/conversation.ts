@@ -170,6 +170,18 @@ export function sourcesForIds(
   });
 }
 
+export function citationDisplayById(sourceIds: string[]): Map<string, number> {
+  const map = new Map<string, number>();
+
+  for (const id of sourceIds) {
+    if (!map.has(id)) {
+      map.set(id, map.size + 1);
+    }
+  }
+
+  return map;
+}
+
 export function sourceById(
   catalog: ConversationSource[],
   id: string,

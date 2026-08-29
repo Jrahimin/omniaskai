@@ -24,7 +24,9 @@ I ask
  → I can naturally continue in this page session
 ```
 
-Trust wording stays human: **From sources** / **উৎসসহ**. Never “Verified”, RAG, or retrieval language. Citation chips highlight and scroll to the matching source card. Insufficient-evidence answers omit the cue.
+Trust wording stays human: **Based on 4 sources · 8 references** when the answer cites sources, otherwise no evidence cue. Never “Verified”, RAG, or retrieval language. Citation chips show answer-scoped numbers such as `[1]`, `[2]` (each completed answer starts at 1). Internal source ids stay stable across the session. Chips highlight and scroll to the matching source group. Insufficient-evidence answers omit the cue.
+
+Final answers use a small safe renderer for headings, lists, bold/emphasis, and simple markdown tables. Raw `| --- |` table syntax is not shown in the completed UI. Streaming uses the same renderer so formatted blocks appear as soon as they are complete, then settle into the final card without a full fade-out.
 
 ## Live turn
 
@@ -63,6 +65,9 @@ Completed answers include conversational replies and other non-grounded finals (
 Evidence still lives on the **assistant turn**.
 
 - Knowledge and web citations map into the existing source cards
+- Repeated citation snapshots are grouped by document (title for knowledge, URL for web)
+- The panel heading shows a distinct **source count** and **reference count**, e.g. `2 sources · 8 references`
+- Display numbers on **In this answer** match the answer’s `[1]` chips; ids are unchanged
 - Web sources use the real `web_url` for **View source** and the URL hostname as the visible publisher/label
 - Web search provider and retrieval timestamps stay off the source card
 - Citation ids are scoped per completed answer so each APE snapshot keeps its own metadata

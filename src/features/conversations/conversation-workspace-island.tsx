@@ -18,7 +18,7 @@ import {
 } from "./conversation";
 import { ConversationComposer } from "./conversation-composer";
 import {
-  formatSourcesCount,
+  formatEvidenceCounts,
   resolveWorkspaceGuide,
 } from "./conversation-guide";
 import { ConversationHistorySidebar } from "./conversation-history-sidebar";
@@ -33,6 +33,7 @@ import { readConversationTurnStream } from "./conversation-stream-client";
 import { ConversationThread } from "./conversation-thread";
 import { ConversationTopicGuideDialog } from "./conversation-topic-guide-dialog";
 import { ConversationTopicHeader } from "./conversation-topic-header";
+import { groupSourcesByDocument } from "./group-conversation-sources";
 
 const CRAMPED_QUERY = "(max-width: 899px)";
 const SHEET_QUERY = "(max-width: 639px)";
@@ -124,15 +125,31 @@ export function ConversationWorkspaceIsland({
     session.sources,
     getConversationSourceIds(turns),
   );
-  const visibleSourceCount =
-    sourceTab === "answer" ? answerSources.length : conversationSources.length;
+  const visibleSources =
+    sourceTab === "answer" ? answerSources : conversationSources;
+  const groupedSourceCount = groupSourcesByDocument(visibleSources).length;
   const sourcesHeading =
-    visibleSourceCount > 0
-      ? formatSourcesCount(visibleSourceCount, copy.sourcesCount, locale)
+    visibleSources.length > 0
+      ? formatEvidenceCounts(
+          groupedSourceCount,
+          visibleSources.length,
+          copy.evidenceCounts,
+          copy.sourcesCount,
+          copy.referencesCount,
+          locale,
+        )
       : copy.sources;
+  const answerGroupCount = groupSourcesByDocument(answerSources).length;
   const mobileSourcesLabel =
     answerSources.length > 0
-      ? formatSourcesCount(answerSources.length, copy.sourcesCount, locale)
+      ? formatEvidenceCounts(
+          answerGroupCount,
+          answerSources.length,
+          copy.evidenceCounts,
+          copy.sourcesCount,
+          copy.referencesCount,
+          locale,
+        )
       : copy.sources;
 
   function closeDialog(ref: { current: HTMLDialogElement | null }) {
@@ -157,7 +174,7 @@ export function ConversationWorkspaceIsland({
     setFlashingSourceId(sourceId);
     window.setTimeout(() => {
       setFlashingSourceId((current) => (current === sourceId ? null : current));
-    }, 200);
+    }, 520);
   }
 
   function revealSourceCard(sourceId: string) {
@@ -378,6 +395,7 @@ export function ConversationWorkspaceIsland({
   function renderSources(showClose: boolean) {
     return (
       <ConversationSourcePanel
+        locale={locale}
         copy={copy}
         tab={sourceTab}
         onTabChange={setSourceTab}
@@ -433,7 +451,7 @@ export function ConversationWorkspaceIsland({
             <main
               id="main"
               tabIndex={-1}
-              className="workspace-reading min-h-0 flex-1 overflow-y-auto px-4 py-4 min-[1024px]:px-6"
+              className="workspace-reading min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-5 pb-10 min-[1024px]:px-6"
             >
               <ConversationThread
                 locale={locale}
@@ -467,7 +485,7 @@ export function ConversationWorkspaceIsland({
             />
           </div>
           <aside
-            className="workspace-sources workspace-sources-rail border-border border-l"
+            className="workspace-sources workspace-sources-rail"
             aria-label={copy.sources}
           >
             {renderSources(false)}

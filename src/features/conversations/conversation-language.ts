@@ -58,9 +58,15 @@ export type ConversationCopy = {
   aboutHeading: string;
   closeAbout: string;
   fromSources: string;
+  basedOnEvidence: string;
   sources: string;
   inThisAnswer: string;
   conversationSources: string;
+  referencesCount: string;
+  evidenceCounts: string;
+  referencedIn: string;
+  evidenceNote: string;
+  quickAnswer: string;
   viewSource: string;
   requestSourceTitle: string;
   requestSourceBody: string;
@@ -278,9 +284,16 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     aboutHeading: "About this knowledge space",
     closeAbout: "Close",
     fromSources: "From sources",
+    basedOnEvidence: "Based on {sources} · {references}",
     sources: "Sources",
     inThisAnswer: "In this answer",
-    conversationSources: "Conversation sources",
+    conversationSources: "All sources",
+    referencesCount: "{n} references",
+    evidenceCounts: "{sources} · {references}",
+    referencedIn: "Referenced in",
+    evidenceNote:
+      "Sources are selected automatically to support this answer.",
+    quickAnswer: "Quick answer",
     viewSource: "View source",
     requestSourceTitle: "Can't find what you need?",
     requestSourceBody:
@@ -295,7 +308,7 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     emptyTitle: "Ask this knowledge space",
     emptyBody:
       "Start with a question below, or write your own. Answers stay readable — and sources stay close.",
-    pendingLabel: "Looking through sources…",
+    pendingLabel: "Reviewing relevant sources…",
     errorTitle: "This answer could not be shown",
     errorBody:
       "Something went wrong while preparing this reply. Start a new conversation, then ask again.",
@@ -373,9 +386,15 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     aboutHeading: "এই জ্ঞান-পরিসর সম্পর্কে",
     closeAbout: "বন্ধ করুন",
     fromSources: "উৎসসহ",
+    basedOnEvidence: "{sources} · {references} ভিত্তিতে",
     sources: "উৎস",
     inThisAnswer: "এই উত্তরের উৎস",
-    conversationSources: "আলোচনার উৎস",
+    conversationSources: "সব উৎস",
+    referencesCount: "{n}টি রেফারেন্স",
+    evidenceCounts: "{sources} · {references}",
+    referencedIn: "রেফারেন্স",
+    evidenceNote: "উত্তরকে সমর্থন করতে উৎস স্বয়ংক্রিয়ভাবে বেছে নেওয়া হয়।",
+    quickAnswer: "সংক্ষিপ্ত উত্তর",
     viewSource: "উৎস দেখুন",
     requestSourceTitle: "যা খুঁজছেন তা পাচ্ছেন না?",
     requestSourceBody:
@@ -390,7 +409,7 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     emptyTitle: "এই জ্ঞান-পরিসরে জিজ্ঞাসা করুন",
     emptyBody:
       "নিচের একটি প্রশ্ন দিয়ে শুরু করুন, অথবা নিজেরটা লিখুন। উত্তর পাঠযোগ্য থাকবে — উৎসও কাছে থাকবে।",
-    pendingLabel: "উৎস দেখা হচ্ছে…",
+    pendingLabel: "প্রাসঙ্গিক উৎস দেখা হচ্ছে…",
     errorTitle: "এই উত্তর দেখানো যায়নি",
     errorBody:
       "উত্তর তৈরি করতে গিয়ে সমস্যা হয়েছে। নতুন আলোচনা শুরু করে আবার জিজ্ঞাসা করুন।",

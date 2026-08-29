@@ -86,7 +86,7 @@ export function ConversationTopicHeader({
               {identity.title}
             </h1>
             {identity.badge ? (
-              <span className="inline-flex items-center rounded-full bg-[#f4ead0] px-2 py-0.5 text-[0.62rem] font-semibold text-[#8a6420]">
+              <span className="bg-[var(--workspace-accent-soft)] text-[var(--workspace-accent-ink)] inline-flex items-center rounded-full px-2 py-0.5 text-[0.62rem] font-semibold">
                 {identity.badge}
               </span>
             ) : null}
@@ -111,7 +111,7 @@ export function ConversationTopicHeader({
             <button
               type="button"
               onClick={onOpenGuide}
-              className="text-foreground inline-flex cursor-pointer items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[0.7rem] font-medium"
+              className="text-muted hover:text-foreground inline-flex cursor-pointer items-center gap-1 text-[0.7rem] font-medium"
               aria-haspopup="dialog"
             >
               <InfoCircleIcon className="size-3.5" />
