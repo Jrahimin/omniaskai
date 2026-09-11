@@ -30,7 +30,7 @@ jobs:
       TEST_DATABASE_URL: postgres://omniaskai:omniaskai@localhost:5432/omniaskai_test
       APP_ORIGIN: http://localhost:3011
       BETTER_AUTH_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-      MEDIA_STORAGE_DIR: ${{ runner.temp }}/omniaskai-media
+      MEDIA_STORAGE_DIR: /tmp/omniaskai-media
 
     steps:
       - name: Checkout
