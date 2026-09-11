@@ -76,7 +76,11 @@ export async function readConversationTurnStream(
       if (frame.event === "error") {
         settled = true;
         tokens.flush();
-        handlers.onError(!conversationIssued);
+        const retryable =
+          isRecord(frame.data) && typeof frame.data.retryable === "boolean"
+            ? frame.data.retryable
+            : !conversationIssued;
+        handlers.onError(retryable);
       }
     },
     signal,

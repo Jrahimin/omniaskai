@@ -137,6 +137,12 @@ html[lang="bn"] .landing-hero-title {
   --topic-glow: rgba(196, 86, 68, 0.34);
 }
 
+.topic-world-card-fallback {
+  background:
+    radial-gradient(ellipse 70% 80% at 20% 20%, color-mix(in srgb, var(--topic-glow) 70%, white) 0%, transparent 58%),
+    linear-gradient(135deg, #1c2434 0%, #0f141d 100%);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .topic-world-card {
     transition:

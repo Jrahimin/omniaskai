@@ -20,6 +20,9 @@
 # production
 /build
 
+# uploaded topic artwork
+/storage/
+
 # misc
 .DS_Store
 *.pem

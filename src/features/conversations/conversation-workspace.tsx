@@ -14,6 +14,7 @@ type ConversationWorkspaceProps = {
   identity: TopicIdentityCopy;
   presentation: TopicPresentation;
   workspace: TopicWorkspace;
+  conversationEnabled?: boolean;
 };
 
 export function ConversationWorkspace({
@@ -22,6 +23,7 @@ export function ConversationWorkspace({
   identity,
   presentation,
   workspace,
+  conversationEnabled = true,
 }: ConversationWorkspaceProps) {
   return (
     <ConversationWorkspaceIsland
@@ -30,6 +32,7 @@ export function ConversationWorkspace({
       identity={identity}
       presentation={presentation}
       workspace={workspace}
+      conversationEnabled={conversationEnabled}
     />
   );
 }

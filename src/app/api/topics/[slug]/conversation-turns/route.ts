@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
-import { isConversationTopicSlug } from "@/features/conversations/conversation-language";
+import { loadPublishedTopicExecution } from "@/features/topics/server/topic-catalog-read";
+import { TopicCatalogUnavailableError } from "@/features/topics/server/topic-errors";
 import {
   isSameOriginRequest,
   readJsonBodyWithinLimit,
@@ -9,6 +10,7 @@ import {
 } from "@/features/conversations/server/stream-conversation-turn.server";
 
 export const maxDuration = 120;
+export const dynamic = "force-dynamic";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
@@ -21,8 +23,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const { slug } = await context.params;
 
-  if (!isConversationTopicSlug(slug)) {
-    return Response.json({ error: true }, { status: 404 });
+  try {
+    const topic = await loadPublishedTopicExecution(slug);
+
+    if (!topic) {
+      return Response.json({ error: true }, { status: 404 });
+    }
+  } catch (error) {
+    if (error instanceof TopicCatalogUnavailableError) {
+      return Response.json({ error: true }, { status: 503 });
+    }
+
+    throw error;
   }
 
   const bodyResult = await readJsonBodyWithinLimit(request);
@@ -53,7 +65,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
           enqueue,
         });
       } catch {
-        enqueue("event: error\ndata: {}\n\n");
+        enqueue(
+          'event: error\ndata: {"retryable":false,"code":"unavailable"}\n\n',
+        );
       } finally {
         controller.close();
       }

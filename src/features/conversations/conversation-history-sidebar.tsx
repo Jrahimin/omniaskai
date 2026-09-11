@@ -4,23 +4,12 @@ import Link from "next/link";
 import type { Conversation } from "./conversation";
 import type { ConversationCopy } from "./conversation-language";
 import {
-  CalculatorIcon,
   CollapseSidebarIcon,
   CrownIcon,
   ExpandSidebarIcon,
-  GuideIcon,
   PlusIcon,
-  ScenariosIcon,
   SearchIcon,
-  UpdatesIcon,
 } from "./conversation-icons";
-
-const exploreIcons = {
-  guides: GuideIcon,
-  calculators: CalculatorIcon,
-  updates: UpdatesIcon,
-  scenarios: ScenariosIcon,
-} as const;
 
 const railToggleClassName =
   "text-muted hover:bg-white hover:text-foreground focus-visible:outline-brand inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2";
@@ -28,8 +17,6 @@ const railToggleClassName =
 type ConversationHistorySidebarProps = {
   searchInputId: string;
   copy: ConversationCopy;
-  exploreItemIds: string[];
-  exploreLabels: Record<string, string>;
   conversations: Conversation[];
   activeConversationId: string | null;
   search: string;
@@ -44,8 +31,6 @@ type ConversationHistorySidebarProps = {
 
 export function ConversationHistorySidebar({
   copy,
-  exploreItemIds,
-  exploreLabels,
   conversations,
   activeConversationId,
   search,
@@ -176,34 +161,6 @@ export function ConversationHistorySidebar({
           onSelect={onSelectConversation}
         />
       </nav>
-
-      <div className="mt-auto px-3 pb-2">
-        <p className="text-muted px-1 pb-1 text-[0.62rem] font-semibold tracking-wide uppercase">
-          {copy.exploreThisTopic}
-        </p>
-        <ul className="flex flex-col">
-          {exploreItemIds.map((id) => {
-            const Icon =
-              exploreIcons[id as keyof typeof exploreIcons] ?? GuideIcon;
-            const label = exploreLabels[id] ?? id;
-
-            return (
-              <li key={id}>
-                <button
-                  type="button"
-                  disabled
-                  title={copy.unavailable}
-                  aria-label={`${label}. ${copy.unavailable}`}
-                  className="text-muted flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1 text-left text-[0.74rem] opacity-75"
-                >
-                  <Icon className="size-3.5 shrink-0" />
-                  {label}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
 
       <div className="mx-3 mb-3 flex items-center gap-1.5 px-1 py-1">
         <CrownIcon className="size-3.5 shrink-0 text-[#b8892d]" />

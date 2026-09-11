@@ -8,23 +8,36 @@
     "start": "next start -p 3011",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.mts",
+    "db:migrate": "tsx --tsconfig tsconfig.scripts.json scripts/db-migrate.ts",
+    "db:seed": "tsx --tsconfig tsconfig.scripts.json scripts/db-seed.ts",
+    "catalog": "tsx --tsconfig tsconfig.scripts.json scripts/catalog.ts",
+    "admin:create": "tsx --tsconfig tsconfig.scripts.json scripts/admin-create.ts"
   },
   "dependencies": {
+    "better-auth": "^1.7.4",
+    "drizzle-orm": "^0.45.2",
     "next": "16.3.2",
+    "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.4",
+    "zod": "^4.6.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5",
     "vitest": "^4.1.11"
   }

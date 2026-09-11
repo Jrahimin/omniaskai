@@ -1,22 +1,17 @@
-export type LandingTopicSlug =
-  | "income-tax"
-  | "literature"
-  | "bangladesh-history"
-  | "movies-culture";
-
 export type TopicCardCopy = {
   title: string;
   subtitle: string;
-  sourceCount: string;
+  sourceDescription: string;
   explore: string;
   badge?: string;
-  preview: {
+  preview?: {
     youLabel: string;
     assistantLabel: string;
     question: string;
     answer: string;
     sources: string[];
   };
+  exampleLabel: string;
 };
 
 export type LandingCopy = {
@@ -54,7 +49,12 @@ export type LandingCopy = {
   };
   topics: {
     heading: string;
-    cards: Record<LandingTopicSlug, TopicCardCopy>;
+    empty: string;
+    unavailable: string;
+    exampleLabel: string;
+    exploreTemplate: string;
+    previewYouLabel: string;
+    previewAssistantLabel: string;
   };
   features: {
     items: [
@@ -97,114 +97,6 @@ export type LandingCopy = {
     authorName: string;
     opensInNewTab: string;
   };
-};
-
-const topicPreviews: Record<LandingTopicSlug, TopicCardCopy["preview"]> = {
-  "income-tax": {
-    youLabel: "You",
-    assistantLabel: "OmniAskAI",
-    question: "What income sources are taxable in Bangladesh?",
-    answer:
-      "Salary, business income, capital gains and a few other sources can be taxable. The exact rule depends on the type of income — and some income may be exempt.",
-    sources: ["NBR Guide", "Income Tax Act"],
-  },
-
-  literature: {
-    youLabel: "You",
-    assistantLabel: "OmniAskAI",
-    question: "রবীন্দ্রনাথের 'দুই বিঘা জমি' কবিতার আসল কথাটা কী?",
-    answer:
-      "এটা শুধু জমি হারানোর গল্প নয়। ছোট একজন মানুষের অসহায়তা, ক্ষমতার অন্যায় আর নিজের মাটির প্রতি টান—সব মিলিয়েই কবিতার মূল অনুভূতি।",
-    sources: ["কবিতা পাঠ", "সাহিত্য আলোচনা"],
-  },
-
-  "bangladesh-history": {
-    youLabel: "You",
-    assistantLabel: "OmniAskAI",
-    question: "British raj kivabe Bangla dokhol korlo?",
-    answer:
-      "It happened step by step. Plassey in 1757 gave the Company political influence, Buxar strengthened it, and the Diwani in 1765 handed them control over Bengal's revenue.",
-    sources: ["Plassey 1757", "Diwani 1765"],
-  },
-
-  "movies-culture": {
-    youLabel: "You",
-    assistantLabel: "OmniAskAI",
-    question: "সত্যজিৎ রায়ের সিনেমা এত আলাদা কেন?",
-    answer:
-      "কারণ তিনি সাধারণ জীবনকেও অসাধারণভাবে দেখাতে পারতেন। মানুষ, নীরবতা, ছোট ছোট মুহূর্ত—সবকিছুর ভেতর থেকেই তিনি গভীর গল্প তৈরি করেছেন।",
-    sources: ["পথের পাঁচালী", "Ray on Ray"],
-  },
-};
-
-const englishCards: Record<LandingTopicSlug, TopicCardCopy> = {
-  "income-tax": {
-    title: "Income Tax",
-    subtitle: "Understand tax rules without getting lost in legal language.",
-    sourceCount: "18,450+ sources",
-    explore: "Explore Income Tax",
-    badge: "Popular",
-    preview: topicPreviews["income-tax"],
-  },
-
-  literature: {
-    title: "Literature",
-    subtitle: "Go beyond the summary. Explore stories, poems, ideas and meaning.",
-    sourceCount: "9,200+ sources",
-    explore: "Explore Literature",
-    preview: topicPreviews.literature,
-  },
-
-  "bangladesh-history": {
-    title: "Bangladesh History",
-    subtitle: "Follow the people, events and turning points that shaped Bangladesh.",
-    sourceCount: "12,800+ sources",
-    explore: "Explore History",
-    preview: topicPreviews["bangladesh-history"],
-  },
-
-  "movies-culture": {
-    title: "Movies & Culture",
-    subtitle: "Discover the stories behind films, music, artists and culture.",
-    sourceCount: "7,640+ sources",
-    explore: "Explore Movies & Culture",
-    preview: topicPreviews["movies-culture"],
-  },
-};
-
-const banglaCards: Record<LandingTopicSlug, TopicCardCopy> = {
-  "income-tax": {
-    title: "আয়কর",
-    subtitle: "জটিল করের নিয়ম সহজ ভাষায় বুঝে নিন।",
-    sourceCount: "১৮,৪৫০+ উৎস",
-    explore: "আয়কর জানুন",
-    badge: "জনপ্রিয়",
-    preview: topicPreviews["income-tax"],
-  },
-
-  literature: {
-    title: "সাহিত্য",
-    subtitle: "শুধু সারাংশ নয়—গল্প, কবিতা আর ভাবনার ভেতরে ঢুকে পড়ুন।",
-    sourceCount: "৯,২০০+ উৎস",
-    explore: "সাহিত্য ঘুরে দেখুন",
-    preview: topicPreviews.literature,
-  },
-
-  "bangladesh-history": {
-    title: "বাংলাদেশের ইতিহাস",
-    subtitle: "মানুষ, ঘটনা আর মোড় ঘুরিয়ে দেওয়া মুহূর্তগুলো সহজভাবে জানুন।",
-    sourceCount: "১২,৮০০+ উৎস",
-    explore: "ইতিহাস ঘুরে দেখুন",
-    preview: topicPreviews["bangladesh-history"],
-  },
-
-  "movies-culture": {
-    title: "সিনেমা ও সংস্কৃতি",
-    subtitle: "সিনেমা, গান, শিল্পী আর সংস্কৃতির পেছনের গল্পগুলো আবিষ্কার করুন।",
-    sourceCount: "৭,৬৪০+ উৎস",
-    explore: "সিনেমা ও সংস্কৃতি দেখুন",
-    preview: topicPreviews["movies-culture"],
-  },
 };
 
 export const landingLanguage = {
@@ -260,7 +152,13 @@ export const landingLanguage = {
 
     topics: {
       heading: "Pick a world. Start exploring.",
-      cards: englishCards,
+      empty: "No knowledge worlds are published yet. Check back soon.",
+      unavailable:
+        "Topic discovery is temporarily unavailable. Please try again shortly.",
+      exampleLabel: "Example",
+      exploreTemplate: "Explore {title}",
+      previewYouLabel: "You",
+      previewAssistantLabel: "OmniAskAI",
     },
 
     features: {
@@ -389,7 +287,13 @@ export const landingLanguage = {
 
     topics: {
       heading: "একটা জগৎ বেছে নিন, তারপর আলাপ শুরু করুন।",
-      cards: banglaCards,
+      empty: "এখনও কোনো জ্ঞান-পরিসর প্রকাশিত হয়নি। একটু পরে আবার দেখুন।",
+      unavailable:
+        "বিষয়গুলো এখন দেখানো যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।",
+      exampleLabel: "উদাহরণ",
+      exploreTemplate: "{title} ঘুরে দেখুন",
+      previewYouLabel: "You",
+      previewAssistantLabel: "OmniAskAI",
     },
 
     features: {

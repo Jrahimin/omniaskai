@@ -185,20 +185,26 @@ Key principles:
 
 ```text
 omniaskai/
-├── public/                  # brand, landing, topic artwork
+├── public/                  # brand, landing, bundled topic artwork
+├── storage/                # uploaded artwork (MEDIA_STORAGE_DIR; gitignored)
 ├── src/
-│   ├── app/                 # layout, landing, /topics/[slug], conversation BFF
+│   ├── app/                 # layout, landing, /topics, /admin, BFF, /media
 │   ├── features/
-│   │   ├── landing/         # marketing landing, EN/BN copy
-│   │   ├── topics/          # Topic catalog, presentation, APE Project mapping
-│   │   └── conversations/   # workspace UI + server APE stream boundary
-│   └── lib/locale/          # cookie locale + language switch
+│   │   ├── landing/         # marketing landing, EN/BN chrome copy
+│   │   ├── topics/          # catalog reads, publication, seed/catalog command
+│   │   ├── conversations/  # workspace UI + server APE stream boundary
+│   │   └── admin/          # operator shell, topic/conversation inspection
+│   └── lib/
+│       ├── db/              # PostgreSQL pool, schema, reviewed migrations
+│       ├── auth/            # Better Auth server/client
+│       ├── media/           # upload encode and storage paths
+│       └── locale/          # cookie locale + language switch
+├── drizzle/                 # reviewed SQL migrations
+├── scripts/                 # db:migrate, db:seed, catalog, admin:create
 ├── docs/
 │   ├── project_plan.md
+│   ├── plans/
 │   └── features/
-│       ├── topics_feature.md
-│       ├── landing_feature.md
-│       └── conversations_feature.md
 ├── reference-concept-pages/
 └── .cursor/rules/
 ```
@@ -212,11 +218,13 @@ omniaskai/
 * APE remains the only RAG/AI infrastructure layer.
 * APE credentials are server-side only.
 * Topic and APE Project remain separate concepts.
-* Topic → APE Project mapping is server env, not a Topic field.
-* APE credentials and raw conversation ids stay server-side; the browser holds only a sealed continuation token.
+* Topic → APE Project mapping is stored on each published revision in PostgreSQL. Legacy `APE_PROJECT_*` env vars are seed/bootstrap only.
+* APE credentials and raw conversation ids stay server-side; the browser holds a sealed continuation token that contains the local conversation-reference ID.
+* Public topic reads are request-scoped and uncached across requests.
 * Topic behavior should be configuration-driven where practical.
 * Public discovery and SEO are important product concerns.
 * Prefer simple, explicit architecture over premature complexity.
+* Admin authentication is Better Auth email/password with database sessions; bootstrap via `npm run admin:create`. Public signup is disabled.
 
 ---
 
@@ -226,30 +234,42 @@ omniaskai/
 
 ```text
 Current state:
-Phase 1D real APE integration is in place
-(server-only APE client, Topic→Project mapping,
-encrypted continuation token, SSE BFF, session-only history)
+Phase 2 merge-review fixes
+(conflict recovery refreshes slug lock; pending always clears;
+APE Admin reads time out; UTC inspection timestamps)
 
 Current focus:
-Internal pilot of the live conversation loop
+Finish Phase 2 merge checks, then Phase 3 — public users and retention
 
 Topic data:
-Static sample module in src/features/topics/
-(four published topics; presentation map for artwork/mood)
-APE Project UUIDs live in server env mapping, not on Topic
+PostgreSQL catalog with draft/live revisions
+Four seeded topics; publish only when the APE mapping validates
+Presentation is a projection of persisted theme/artwork/copy
+Bundled public/ artwork plus uploaded files under MEDIA_STORAGE_DIR
+Uploaded artwork is served at /media/[assetId]
 
 Workspace:
 Live streaming through /api/topics/[slug]/conversation-turns
-Page-session history only; Auto reply language
+Page-session history; Auto reply language
+Starter questions on empty session; no generated follow-ups
+v2 continuation tokens bind to conversation_reference rows
+Lightweight conversation_reference + turn_operation persistence
+Helpful/not-helpful ratings persist per completed operation
 
 APE integration:
-Create + stream message; citations, provenance, insufficient,
-grounded, and completed answers mapped into existing UI
+Validated for Income Tax (EN / Bangla / Banglish, follow-up token,
+grounded / insufficient / citations)
+Server-only APE client; SSE BFF; project list/detail/transcript reads
 Displayed text strips [n] markers; token deltas are batched
 Failed APE HTTP calls log status and request/trace ids server-side
 
-Admin / public auth / subscriptions:
-Not implemented yet
+Admin:
+Better Auth Superadmin at /admin (Topics + Conversations)
+Bootstrap: npm run admin:create (non-echoing password prompt)
+Uploads, existing-artwork select/clear, EN/BN preview,
+publish/unpublish, retained-revision editor, captured-project
+paginated inspection
+Integration tests require TEST_DATABASE_URL (`*_test` database)
 ```
 
 ---

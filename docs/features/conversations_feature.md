@@ -3,91 +3,52 @@
 The topic **knowledge workspace**: ask, read a clear answer, see why to trust it, inspect a source when you want, continue. It is not a generic chatbot screen.
 
 ```text
-topic context
+published topic
  → user question
  → Next.js BFF
+ → reserve conversation_reference / turn_operation
  → APE stream
+ → persist turn state
  → editorial answer
  → source / citation proof
  → follow-up
 ```
 
-Phase 1D streams real APE answers through a server-only BFF. No database, product auth, admin, or subscriptions.
-
-## Loop
-
-```text
-I ask
- → I get a progressive answer
- → I can see why I should trust it when sources exist
- → I can inspect a source when I want
- → I can naturally continue in this page session
-```
-
-Trust wording stays human: **Based on 4 sources · 8 references** when the answer cites sources, otherwise no evidence cue. Never “Verified”, RAG, or retrieval language. Citation chips show answer-scoped numbers such as `[1]`, `[2]` (each completed answer starts at 1). Internal source ids stay stable across the session. Chips highlight and scroll to the matching source group. Insufficient-evidence answers omit the cue.
-
-Final answers use a small safe renderer for headings, lists, bold/emphasis, and simple markdown tables. Raw `| --- |` table syntax is not shown in the completed UI. Streaming uses the same renderer so formatted blocks appear as soon as they are complete, then settle into the final card without a full fade-out.
+History remains **page-session** in the browser. PostgreSQL stores only lightweight references needed for continuation safety.
 
 ## Live turn
 
-```text
-composer submit
- → pending
- → token text
- → final (buffered content + done evidence)
-```
+The browser POSTs `{ question, continuationToken? }` to `/api/topics/[slug]/conversation-turns`. SSE event names stay `conversation` / `token` / `final` / `error`.
 
-The browser POSTs `{ question, continuationToken? }` to `/api/topics/[slug]/conversation-turns`. The BFF:
+1. Resolve the published topic and APE mapping from PostgreSQL
+2. Open a v2 token to a local `conversation_reference` (legacy v1 tokens are rejected)
+3. Reserve the reference and a running operation **before** calling APE
+4. Persist a newly created APE conversation id before the first message
+5. Stream the answer; `final` may include a public `operationId`
+6. Errors carry `{ retryable, code }` (`retryable` | `start_new` | `unavailable`)
 
-1. Resolves Topic → APE Project on the server
-2. Creates an APE conversation on the first turn
-3. Returns a sealed continuation token (never a raw APE id)
-4. Streams the APE message, accumulating tokens because `done` has no final text
-5. Emits browser-safe `conversation`, `token`, `final`, or generic `error` events
+APE project and conversation UUIDs never appear in public payloads. The sealed token contains the local conversation-reference ID, topic ID, and expiry.
 
-Questions are sent to APE unchanged. Reply language is Auto only. APE Project `response_mode` owns retrieval/web search; there is no frontend search toggle.
+Content-only publication preserves continuation. Remap or unpublish increments `conversation_epoch` and blocks the old token.
+
+If PostgreSQL fails before APE, the turn is retryable and APE is not called. If final persistence fails, the answer is still delivered without `operationId`, continuation is blocked, and the failure is logged.
+
+Expired running operations (beyond the 110s stream deadline) become `unknown` and block continuation. Concurrent running operations are rejected.
 
 ## Classification
 
 | APE outcome | UI |
 | --- | --- |
-| `insufficient_evidence_reason` present | insufficient, no “From sources” |
-| `grounded === true` | grounded; “From sources” only when citations exist |
-| otherwise | completed; never “From sources” |
-| stream / upstream failure | generic error |
+| `insufficient_evidence_reason` present | insufficient; no “Based on …” cue |
+| `grounded === true` | grounded; “Based on N sources · M references” only when citations exist |
+| otherwise | completed; never the “Based on …” cue, even if web citations exist |
+| stream / upstream failure | bounded error; start a new conversation when the outcome is ambiguous |
 
-Completed answers include conversational replies and other non-grounded finals (`grounded=false`), even when web citations are present.
+Feedback is a page-session capability: `POST /api/conversation-turns/[operationId]/feedback` with `{ continuationToken, rating: "up" | "down" | null }`. The token’s conversation must own the completed operation. `null` removes the rating. Failed final persistence omits `operationId`, so those answers are not feedback-eligible.
 
-`source_provenance` is passed through as `knowledge | web | knowledge_and_web | none`. The UI does not infer origin from answer text.
+Admin transcript inspection is on-demand from the captured APE project/conversation. Local references/feedback and APE transcripts have separate retention; no automatic deletion in Phase 2.
 
-## Sources
-
-Evidence still lives on the **assistant turn**.
-
-- Knowledge and web citations map into the existing source cards
-- Repeated citation snapshots are grouped by document (title for knowledge, URL for web)
-- The panel heading shows a distinct **source count** and **reference count**, e.g. `2 sources · 8 references`
-- Display numbers on **In this answer** match the answer’s `[1]` chips; ids are unchanged
-- Web sources use the real `web_url` for **View source** and the URL hostname as the visible publisher/label
-- Web search provider and retrieval timestamps stay off the source card
-- Citation ids are scoped per completed answer so each APE snapshot keeps its own metadata
-- Displayed answer text drops raw `[1]` / `[2]` markers; claim matching still uses the raw APE text
-- Knowledge publisher/year/locator/href stay omitted when APE does not send them
-- Claim chips appear only for an exact, unambiguous claim match with a valid `citation_index`
-- **In this answer** = active turn’s `sourceIds`
-- **Conversation sources** = union of assistant-turn sources in the current thread
-
-## Client
-
-One island owns drawers, rails, and a reducer/state machine for conversations, turns, operation id, continuation token, and pending/streaming/final/error. Token deltas are batched to one UI update per animation frame (or ~40ms). Stale stream events are ignored. Submit is disabled while a turn is open. There is no Stop control.
-
-Retry is only for failures proven to be before APE accepted work (validation or create failure). After create-success/message-failure or an ambiguous transport failure, that local conversation is blocked from further submission and the user starts a new conversation rather than resending.
-
-History is **page-session memory only**. Refresh loses the thread and token. Starter questions still come from topic workspace config.
-
-## Route
-
-`/topics/[slug]` loads the workspace. Unknown slugs call `notFound()`. `robots: noindex`. Locale from the same cookie as landing.
+## Files
 
 ```text
 src/features/conversations/
@@ -95,33 +56,21 @@ src/features/conversations/
   conversation-session-reducer.ts
   conversation-stream-client.ts
   conversation-sse.ts
-  server/                    # APE client, token, mapper, turn runner
-src/features/topics/
-  topic-ape-project-mapping.server.ts
+  get-topic-identity.ts
+  get-topic-workspace.ts
+  server/                    # APE client, v2 token, runner, persistence
 src/app/api/topics/[slug]/conversation-turns/route.ts
 ```
 
-Topic catalog stays lean. APE Project ids are env-mapped by Topic id, not stored on `Topic`.
-
-## Layout
-
-Unchanged from Phase 1C: history rail, compact topic band, conversation, sources. Composer language is Auto-only. Drawers under **~900px**.
-
-## Phase 1 limits
-
-- No persistence; APE may keep orphaned conversations
-- Disconnect/abort is cleanup only and may not cancel committed APE work
-- No automatic retry of message turns
-- Generic stream errors only; failed APE HTTP calls log status and request/trace ids server-side
-- No generated follow-ups
-- Internal pilot protection is deployment-level (Cloudflare Access or equivalent), not product auth
-
 ## Verification
 
-- `npm test` — SSE fragments, Bangla UTF-8, knowledge/web mapping, provenance, insufficient, conversational completion, stream failure, stale events, create-success/message-failure, token tamper
-- `npm run lint`, `typecheck`, `build`
-- Income Tax empty session: submit → tokens → sources; follow-up reuses the continuation token
-- Conversational reply is not treated as insufficient
-- `insufficient_evidence_reason` shows the insufficient state
-- Desktop/mobile rails, citation flash, Enter to send, Escape on dialogs
-- Network payloads contain no APE key, Project id, or raw APE conversation id
+- Token v2 round-trip; reject v1, tamper, expiry, and topic mismatch
+- Create failure is retryable; persist-created failure does not stream
+- Ambiguous transport, malformed SSE, and interruption block continuation
+- Concurrent running operations and expired running operations (expired commits unknown + blocked; late completion is rejected)
+- Continuation rejects failed/unknown last operations even if the conversation is still open
+- Reservation re-reads publication, mapping, and epoch under lock; a stale snapshot after unpublish/remap cannot start APE work
+- Persist-created fails closed when the reference is already blocked
+- Admin APE project/history reads use an 8-second deadline and surface unavailable on timeout
+- Content-only publish preserves continuation; remap/unpublish invalidates it
+- Network payloads contain no APE key, project id, or raw APE conversation id

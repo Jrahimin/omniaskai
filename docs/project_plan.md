@@ -31,8 +31,11 @@
 * sticky composer
 * source/evidence drawer
 * citations
-* follow-up suggestions
+* starter questions on the empty session
+* natural follow-up in the same page session
 * loading, empty, error and insufficient-evidence states
+
+Generated follow-up suggestions are deferred; they are not a Phase 1 requirement.
 
 ### Step 4 — Real APE Integration
 
@@ -56,44 +59,37 @@ Landing
 
 A polished internal product exists and the core value proposition can be tested.
 
+**Closed:** Phase 1 is complete. Live APE integration is validated.
+
+**Closed:** Phase 2 is complete. Public topics persist in PostgreSQL. Operators bootstrap Admin, manage topics, upload artwork, capture feedback, and inspect conversations.
+
+**Current:** Phase 3 — public users and retention.
+
 ---
 
 # Phase 2 — Dynamic Product + Administration
 
 **Goal:** Replace hardcoded product configuration with a manageable platform.
 
-### Step 1 — Product Database
+### Step 1 — Product Persistence Foundation
 
-Introduce persistent OmniAskAI data for:
+**Closed.** Public topics, revisions, mappings, and lightweight conversation references persist in PostgreSQL. Discovery and workspaces read published projections. A catalog command imports and publishes topics without a rebuild.
 
-* topics
-* topic themes/content
-* APE knowledge mappings
-* suggested questions
-* conversation references
-* product configuration
+* topics, revisions, translations, artwork metadata, APE mappings
+* conversation references and turn operations
+* seed/catalog command; no Admin UI yet
 
 ### Step 2 — Dynamic Topics
 
-* load topic discovery from database
-* configure topic identity, artwork and presentation
-* preserve Topic ↔ APE Project separation
-* support publish/unpublish and ordering
+**Closed** with Step 1’s catalog: discovery, identity, artwork, and publish/unpublish/order run from PostgreSQL.
 
 ### Step 3 — Internal Admin
 
-* secure admin access
-* topic create/edit/manage
-* APE Project mapping
-* suggested questions and source descriptions
-* preview/publish workflow
+**Closed.** Better Auth Superadmin, `/admin` Topics and Conversations, APE mapping, preview/publish.
 
 ### Step 4 — Product Operations
 
-* basic conversation inspection
-* feedback capture
-* topic usage visibility
-* simple operational diagnostics
+**Closed** for the Phase 2 scope: persisted helpful/not-helpful feedback and basic conversation inspection. Usage dashboards, diagnostics, pause controls, and audit logs remain deferred.
 
 ### Phase Outcome
 
@@ -105,6 +101,8 @@ Admin configures Topic
 ```
 
 OmniAskAI can grow to multiple knowledge worlds without code changes.
+
+**Closed:** Phase 2.
 
 ---
 

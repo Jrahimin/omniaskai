@@ -1,22 +1,14 @@
 import type { Locale } from "@/lib/locale/locale";
 
-export type ConversationTopicSlug =
-  | "income-tax"
-  | "literature"
-  | "bangladesh-history"
-  | "movies-culture";
-
 export type TopicIdentityCopy = {
   title: string;
   subtitle: string;
   badge?: string;
-  sourceStat: string;
-  collectionStat: string;
-  updatedStat: string;
+  sourceDescription: string;
+  knowledgeReviewDateLabel?: string;
   composerPlaceholder: string;
   artworkAlt: string;
   aboutBody: string;
-  exploreItems: Record<string, string>;
 };
 
 export type WorkspaceGuideStep = {
@@ -44,7 +36,6 @@ export type ConversationCopy = {
   searchLabel: string;
   today: string;
   previous7Days: string;
-  exploreThisTopic: string;
   goDeeper: string;
   goDeeperBody: string;
   upgradeToPro: string;
@@ -57,7 +48,6 @@ export type ConversationCopy = {
   aboutThisTopic: string;
   aboutHeading: string;
   closeAbout: string;
-  fromSources: string;
   basedOnEvidence: string;
   sources: string;
   inThisAnswer: string;
@@ -71,9 +61,11 @@ export type ConversationCopy = {
   requestSourceTitle: string;
   requestSourceBody: string;
   requestSourceAction: string;
-  wasThisHelpful: string;
+    wasThisHelpful: string;
   helpful: string;
   notHelpful: string;
+  helpfulError: string;
+  helpfulUnavailable: string;
   copyAnswer: string;
   copied: string;
   exploreNext: string;
@@ -103,163 +95,10 @@ export type ConversationCopy = {
   noSourcesInAnswer: string;
   noSourcesInConversation: string;
   sourcesCount: string;
+  catalogUnavailableTitle: string;
+  catalogUnavailableBody: string;
+  reviewedOn: string;
   guide: WorkspaceGuideCopy;
-  topics: Record<ConversationTopicSlug, TopicIdentityCopy>;
-};
-
-export function isConversationTopicSlug(
-  value: string,
-): value is ConversationTopicSlug {
-  return (
-    value === "income-tax" ||
-    value === "literature" ||
-    value === "bangladesh-history" ||
-    value === "movies-culture"
-  );
-}
-
-const englishTopics: Record<ConversationTopicSlug, TopicIdentityCopy> = {
-  "income-tax": {
-    title: "Income Tax",
-    subtitle: "Bangladesh Income Tax knowledge space",
-    badge: "Popular",
-    sourceStat: "184 sources",
-    collectionStat: "12 collections",
-    updatedStat: "Updated May 12, 2025",
-    composerPlaceholder: "Ask about Bangladesh Income Tax…",
-    artworkAlt: "Income tax workspace illustration",
-    aboutBody:
-      "Ask in English, Bangla, or Banglish. Answers here are written from curated tax documents — ordinances, NBR guidance, and related notes — so you can read the claim and open the page it came from.",
-    exploreItems: {
-      guides: "Important guides",
-      calculators: "Tax calculators",
-      updates: "Recent updates",
-      scenarios: "Common scenarios",
-    },
-  },
-  literature: {
-    title: "Literature",
-    subtitle: "Bangla and world literature",
-    sourceStat: "96 sources",
-    collectionStat: "8 collections",
-    updatedStat: "Updated April 3, 2025",
-    composerPlaceholder: "Ask about a poem, story, or writer…",
-    artworkAlt: "Literature workspace illustration",
-    aboutBody:
-      "A quiet space for poems, stories, and the conversations around them. Answers point back to the text and to trusted commentary — not to a generic summary.",
-    exploreItems: {
-      guides: "Reading guides",
-      calculators: "Authors",
-      updates: "Poems & stories",
-      scenarios: "Themes",
-    },
-  },
-  "bangladesh-history": {
-    title: "Bangladesh History",
-    subtitle: "People, events, and sources",
-    sourceStat: "142 sources",
-    collectionStat: "9 collections",
-    updatedStat: "Updated March 21, 2025",
-    composerPlaceholder: "Ask about people, events, or turning points…",
-    artworkAlt: "Bangladesh history workspace illustration",
-    aboutBody:
-      "Follow events through primary and secondary sources. The workspace is built so you can ask naturally — including Banglish — and still see where a date or claim comes from.",
-    exploreItems: {
-      guides: "Timelines",
-      calculators: "People",
-      updates: "Key events",
-      scenarios: "Archives",
-    },
-  },
-  "movies-culture": {
-    title: "Movies & Culture",
-    subtitle: "Film, music, and cultural memory",
-    sourceStat: "78 sources",
-    collectionStat: "6 collections",
-    updatedStat: "Updated May 2, 2025",
-    composerPlaceholder: "Ask about a film, song, or artist…",
-    artworkAlt: "Movies and culture workspace illustration",
-    aboutBody:
-      "Films, music, and the people who made them. When the library has the work or a reliable essay, you will see it. When it does not, the workspace says so plainly.",
-    exploreItems: {
-      guides: "Films",
-      calculators: "Directors",
-      updates: "Music",
-      scenarios: "Essays",
-    },
-  },
-};
-
-const banglaTopics: Record<ConversationTopicSlug, TopicIdentityCopy> = {
-  "income-tax": {
-    title: "আয়কর",
-    subtitle: "বাংলাদেশ আয়কর জ্ঞান-পরিসর",
-    badge: "জনপ্রিয়",
-    sourceStat: "১৮৪টি উৎস",
-    collectionStat: "১২টি সংকলন",
-    updatedStat: "হালনাগাদ ১২ মে ২০২৫",
-    composerPlaceholder: "বাংলাদেশের আয়কর নিয়ে জিজ্ঞাসা করুন…",
-    artworkAlt: "আয়কর কর্মপরিসরের ছবি",
-    aboutBody:
-      "ইংরেজি, বাংলা বা বাংলিশে জিজ্ঞাসা করুন। উত্তরগুলো সংকলিত কর-দলিল — অধ্যাদেশ, এনবিআর নির্দেশনা ও সংশ্লিষ্ট নোট — থেকে লেখা, যাতে দাবিটি পড়ে সংশ্লিষ্ট পাতা খোলা যায়।",
-    exploreItems: {
-      guides: "গুরুত্বপূর্ণ নির্দেশিকা",
-      calculators: "কর ক্যালকুলেটর",
-      updates: "সাম্প্রতিক হালনাগাদ",
-      scenarios: "সাধারণ পরিস্থিতি",
-    },
-  },
-  literature: {
-    title: "সাহিত্য",
-    subtitle: "বাংলা ও বিশ্বসাহিত্য",
-    sourceStat: "৯৬টি উৎস",
-    collectionStat: "৮টি সংকলন",
-    updatedStat: "হালনাগাদ ৩ এপ্রিল ২০২৫",
-    composerPlaceholder: "কবিতা, গল্প বা লেখক নিয়ে জিজ্ঞাসা করুন…",
-    artworkAlt: "সাহিত্য কর্মপরিসরের ছবি",
-    aboutBody:
-      "কবিতা, গল্প এবং তার চারপাশের আলোচনার জন্য একটি শান্ত পরিসর। উত্তর মূল পাঠ ও বিশ্বস্ত আলোচনার দিকে ইঙ্গিত করে — সাধারণ সারাংশের দিকে নয়।",
-    exploreItems: {
-      guides: "পাঠ নির্দেশিকা",
-      calculators: "লেখক",
-      updates: "কবিতা ও গল্প",
-      scenarios: "ভাবনা",
-    },
-  },
-  "bangladesh-history": {
-    title: "বাংলাদেশের ইতিহাস",
-    subtitle: "মানুষ, ঘটনা ও উৎস",
-    sourceStat: "১৪২টি উৎস",
-    collectionStat: "৯টি সংকলন",
-    updatedStat: "হালনাগাদ ২১ মার্চ ২০২৫",
-    composerPlaceholder: "মানুষ, ঘটনা বা মোড় নিয়ে জিজ্ঞাসা করুন…",
-    artworkAlt: "বাংলাদেশের ইতিহাস কর্মপরিসরের ছবি",
-    aboutBody:
-      "প্রাথমিক ও গৌণ উৎসের মধ্য দিয়ে ঘটনা অনুসরণ করুন। স্বাভাবিকভাবে — বাংলিশেও — জিজ্ঞাসা করা যায়, আর তারপরও দেখা যায় একটি তারিখ বা দাবি কোথা থেকে এসেছে।",
-    exploreItems: {
-      guides: "সময়রেখা",
-      calculators: "মানুষ",
-      updates: "গুরুত্বপূর্ণ ঘটনা",
-      scenarios: "আর্কাইভ",
-    },
-  },
-  "movies-culture": {
-    title: "সিনেমা ও সংস্কৃতি",
-    subtitle: "চলচ্চিত্র, সঙ্গীত ও সাংস্কৃতিক স্মৃতি",
-    sourceStat: "৭৮টি উৎস",
-    collectionStat: "৬টি সংকলন",
-    updatedStat: "হালনাগাদ ২ মে ২০২৫",
-    composerPlaceholder: "সিনেমা, গান বা শিল্পী নিয়ে জিজ্ঞাসা করুন…",
-    artworkAlt: "সিনেমা ও সংস্কৃতি কর্মপরিসরের ছবি",
-    aboutBody:
-      "সিনেমা, সঙ্গীত এবং যারা সেগুলো তৈরি করেছেন। সংগ্রহে কাজটি বা একটি নির্ভরযোগ্য রচনা থাকলে আপনি তা দেখতে পাবেন। না থাকলে কর্মপরিসর সেটা স্পষ্ট করে বলে।",
-    exploreItems: {
-      guides: "সিনেমা",
-      calculators: "পরিচালক",
-      updates: "সঙ্গীত",
-      scenarios: "রচনা",
-    },
-  },
 };
 
 export const conversationLanguage: Record<Locale, ConversationCopy> = {
@@ -270,7 +109,6 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     searchLabel: "Search conversations",
     today: "Today",
     previous7Days: "Previous 7 days",
-    exploreThisTopic: "Explore this topic",
     goDeeper: "Go deeper with Pro",
     goDeeperBody: "More collections, saved answers, and room to keep going.",
     upgradeToPro: "Upgrade to Pro",
@@ -283,7 +121,6 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     aboutThisTopic: "About this topic",
     aboutHeading: "About this knowledge space",
     closeAbout: "Close",
-    fromSources: "From sources",
     basedOnEvidence: "Based on {sources} · {references}",
     sources: "Sources",
     inThisAnswer: "In this answer",
@@ -302,6 +139,8 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     wasThisHelpful: "Was this helpful?",
     helpful: "Helpful",
     notHelpful: "Not helpful",
+    helpfulError: "Could not save that rating. Try again.",
+    helpfulUnavailable: "Feedback is not available for this answer.",
     copyAnswer: "Copy",
     copied: "Copied",
     exploreNext: "Explore next",
@@ -336,6 +175,10 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     noSourcesInAnswer: "This answer does not cite a source yet.",
     noSourcesInConversation: "No sources in this conversation yet.",
     sourcesCount: "{n} sources",
+    catalogUnavailableTitle: "This knowledge space is unavailable",
+    catalogUnavailableBody:
+      "The topic catalog could not be loaded. Please try again shortly.",
+    reviewedOn: "Reviewed {date}",
     guide: {
       shortHint:
         "Ask naturally → read the answer → check the sources → keep exploring",
@@ -359,11 +202,10 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
         },
         {
           title: "Keep exploring",
-          body: "Use suggested follow-ups or ask your own next question.",
+          body: "Ask your next question in this conversation.",
         },
       ],
     },
-    topics: englishTopics,
   },
   bn: {
     languageSwitchAria: "ভাষা",
@@ -372,7 +214,6 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     searchLabel: "আলোচনা খুঁজুন",
     today: "আজ",
     previous7Days: "গত ৭ দিন",
-    exploreThisTopic: "এই বিষয় ঘুরে দেখুন",
     goDeeper: "Pro-তে আরও গভীরে যান",
     goDeeperBody: "আরও সংকলন, সংরক্ষিত উত্তর, এবং এগোতে থাকার জায়গা।",
     upgradeToPro: "Pro-তে উন্নীত করুন",
@@ -385,7 +226,6 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     aboutThisTopic: "এই বিষয় সম্পর্কে",
     aboutHeading: "এই জ্ঞান-পরিসর সম্পর্কে",
     closeAbout: "বন্ধ করুন",
-    fromSources: "উৎসসহ",
     basedOnEvidence: "{sources} · {references} ভিত্তিতে",
     sources: "উৎস",
     inThisAnswer: "এই উত্তরের উৎস",
@@ -403,6 +243,8 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     wasThisHelpful: "এটি কি কাজে লেগেছে?",
     helpful: "কাজে লেগেছে",
     notHelpful: "কাজে লাগেনি",
+    helpfulError: "রেটিং সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।",
+    helpfulUnavailable: "এই উত্তরে মতামত দেওয়া যাচ্ছে না।",
     copyAnswer: "কপি",
     copied: "কপি হয়েছে",
     exploreNext: "এরপর জানুন",
@@ -437,6 +279,10 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     noSourcesInAnswer: "এই উত্তরে এখনও কোনো উৎস নেই।",
     noSourcesInConversation: "এই আলোচনায় এখনও কোনো উৎস নেই।",
     sourcesCount: "{n}টি উৎস",
+    catalogUnavailableTitle: "এই জ্ঞান-পরিসর এখন খোলা যাচ্ছে না",
+    catalogUnavailableBody:
+      "বিষয়ের তথ্য এখন লোড করা যায়নি। একটু পরে আবার চেষ্টা করুন।",
+    reviewedOn: "হালনাগাদ {date}",
     guide: {
       shortHint:
         "স্বাভাবিকভাবে জিজ্ঞাসা করুন → উত্তর পড়ুন → উৎস দেখুন → ঘুরে দেখতে থাকুন",
@@ -460,10 +306,9 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
         },
         {
           title: "ঘুরে দেখতে থাকুন",
-          body: "সাজানো পরবর্তী প্রশ্ন ব্যবহার করুন, অথবা নিজের পরের প্রশ্ন করুন।",
+          body: "এই আলোচনায় আপনার পরের প্রশ্ন করুন।",
         },
       ],
     },
-    topics: banglaTopics,
   },
 };

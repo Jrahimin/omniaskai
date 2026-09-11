@@ -47,14 +47,18 @@ export function ConversationTopicHeader({
     <header className="workspace-header workspace-topic-band">
       <div className="workspace-topic-band-glow" aria-hidden="true" />
       <div className="workspace-topic-band-art">
-        <Image
-          src={presentation.artworkSrc}
-          alt=""
-          fill
-          sizes="320px"
-          className="object-cover"
-          style={{ objectPosition: presentation.objectPosition }}
-        />
+        {presentation.artworkSrc ? (
+          <Image
+            src={presentation.artworkSrc}
+            alt=""
+            fill
+            sizes="320px"
+            className="object-cover"
+            style={{ objectPosition: presentation.objectPosition }}
+          />
+        ) : (
+          <div aria-hidden="true" className="topic-world-card-fallback absolute inset-0" />
+        )}
       </div>
 
       <div className="relative z-1 flex items-start justify-between gap-3 px-4 py-3 min-[1024px]:px-5 min-[1280px]:px-6">
@@ -96,12 +100,14 @@ export function ConversationTopicHeader({
           <ul className="text-muted mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[0.7rem]">
             <li className="inline-flex items-center gap-1">
               <SourcesMarkIcon className="size-3.5" />
-              {identity.sourceStat}
+              {identity.sourceDescription}
             </li>
-            <li className="inline-flex items-center gap-1">
-              <CalendarIcon className="size-3.5" />
-              {identity.updatedStat}
-            </li>
+            {identity.knowledgeReviewDateLabel ? (
+              <li className="inline-flex items-center gap-1">
+                <CalendarIcon className="size-3.5" />
+                {identity.knowledgeReviewDateLabel}
+              </li>
+            ) : null}
           </ul>
 
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">

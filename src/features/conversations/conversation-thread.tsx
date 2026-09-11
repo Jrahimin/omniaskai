@@ -18,6 +18,8 @@ type ConversationThreadProps = {
   activeAnswerId: string | null;
   selectedSourceId: string | null;
   helpfulByAnswer: Record<string, "up" | "down" | null>;
+  helpfulPendingId: string | null;
+  helpfulErrorByAnswer: Record<string, true>;
   copiedAnswerId: string | null;
   onCitation: (answerId: string, sourceId: string) => void;
   onOpenSources: (answerId: string) => void;
@@ -35,6 +37,8 @@ export function ConversationThread({
   activeAnswerId,
   selectedSourceId,
   helpfulByAnswer,
+  helpfulPendingId,
+  helpfulErrorByAnswer,
   copiedAnswerId,
   onCitation,
   onOpenSources,
@@ -120,6 +124,8 @@ export function ConversationThread({
               }
               isActiveEvidence={activeAnswerId === turn.id}
               helpful={helpfulByAnswer[turn.id] ?? null}
+              helpfulPending={helpfulPendingId === turn.id}
+              helpfulError={helpfulErrorByAnswer[turn.id] === true}
               copied={copiedAnswerId === turn.id}
               onCitation={(sourceId) => onCitation(turn.id, sourceId)}
               onOpenSources={() => onOpenSources(turn.id)}
