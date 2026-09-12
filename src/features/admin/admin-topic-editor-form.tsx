@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import type {
@@ -8,8 +9,8 @@ import type {
   AdminTopicEditor,
 } from "@/features/topics/admin-topic-types";
 import { topicThemeKeys, type TopicThemeKey } from "@/features/topics/topic-theme";
-import { uploadedArtworkSrc } from "@/features/topics/topic-presentation";
 
+import { AdminArtworkPicker } from "./admin-artwork-picker";
 import { adminCopy } from "./admin-copy";
 import {
   checkAdminApeProjectAction,
@@ -20,8 +21,10 @@ import {
   unpublishAdminTopicAction,
 } from "./admin-topic-actions";
 import {
+  artworkPositionOptions,
   editorSaveFingerprint,
   fieldsFromEditor,
+  knowledgeProjectsForPicker,
   recoveredEditorMetadata,
   translationForSave,
   type EditorTranslation,
@@ -31,12 +34,18 @@ import { AdminTopicPreview } from "./admin-topic-preview";
 type AdminTopicEditorFormProps = {
   topic: AdminTopicEditor;
   initialProjects: Array<{ id: string; name: string }>;
+  projectsTotal?: number;
+  storedProject?: { id: string; name: string } | null;
+  projectsUnavailable?: boolean;
   artworkOptions: AdminArtworkOption[];
 };
 
 export function AdminTopicEditorForm({
   topic,
   initialProjects,
+  projectsTotal = initialProjects.length,
+  storedProject = null,
+  projectsUnavailable = false,
   artworkOptions,
 }: AdminTopicEditorFormProps) {
   const router = useRouter();
@@ -64,8 +73,14 @@ export function AdminTopicEditorForm({
   const [conflict, setConflict] = useState(false);
   const [pending, setPending] = useState(false);
   const [projects, setProjects] = useState(initialProjects);
+  const [projectsMayHaveMore, setProjectsMayHaveMore] = useState(
+    initialProjects.length < projectsTotal,
+  );
   const [projectStatus, setProjectStatus] = useState<string | null>(
     initial.source?.lastValidationResult ?? null,
+  );
+  const [selectedProjectName, setSelectedProjectName] = useState(
+    storedProject?.name ?? null,
   );
   const [savedFingerprint, setSavedFingerprint] = useState(() =>
     editorSaveFingerprint({
@@ -100,6 +115,7 @@ export function AdminTopicEditorForm({
   function applyArtwork(assetId: string, src: string | undefined) {
     setArtworkAssetId(assetId);
     setArtworkSrc(src);
+    setMessage(null);
   }
 
   function applyImmutableMetadata(
@@ -228,6 +244,7 @@ export function AdminTopicEditorForm({
       setArtworkAssetId(next.source?.artworkAssetId ?? "");
       setArtworkSrc(next.source?.artworkSrc);
       setApeProjectId(next.source?.apeProjectId ?? "");
+      setSelectedProjectName(null);
       setEnglish(next.english);
       setBangla(next.bangla);
       setIncludeBangla(next.includeBangla);
@@ -250,30 +267,65 @@ export function AdminTopicEditorForm({
     });
   }
 
-  const statusLabel = isLive
-    ? adminCopy.statusLive
-    : topic.live || topic.retained
-      ? adminCopy.statusUnpublished
-      : adminCopy.statusDraft;
+  const statusLabel = (() => {
+    const base = isLive
+      ? adminCopy.statusLive
+      : topic.live || topic.retained
+        ? adminCopy.statusUnpublished
+        : adminCopy.statusDraft;
+
+    if (dirty) {
+      return `${base} · ${adminCopy.unsaved}`;
+    }
+
+    if (isLive && hasDraft) {
+      return `${base} · ${adminCopy.statusDraftWaiting}`;
+    }
+
+    if (!isLive && hasDraft && (topic.live || topic.retained)) {
+      return `${base} · ${adminCopy.statusDraft}`;
+    }
+
+    return base;
+  })();
+
+  const focalOptions = artworkPositionOptions.some((option) => option.value === focalPosition)
+    ? artworkPositionOptions
+    : [{ value: focalPosition, label: focalPosition }, ...artworkPositionOptions];
+  const pickerProjects = knowledgeProjectsForPicker(
+    projects,
+    apeProjectId,
+    selectedProjectName,
+  );
+  const liveApeProjectId = topic.live?.apeProjectId ?? null;
+  const draftApeProjectId = apeProjectId.trim() || null;
+  const liveMappingDiffers =
+    Boolean(liveApeProjectId) &&
+    Boolean(draftApeProjectId) &&
+    liveApeProjectId !== draftApeProjectId;
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-muted text-sm">
-            {statusLabel}
-            {hasDraft ? ` · ${adminCopy.statusDraft}` : ""}
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight">{english.title || topic.slug}</h1>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setSection(section === "edit" ? "preview" : "edit")}
-            className="cursor-pointer rounded-full border border-[var(--border)] px-3 py-2 text-sm font-medium"
-          >
-            {adminCopy.preview}
-          </button>
+      <div>
+        <Link
+          href="/admin/topics"
+          className="text-muted hover:text-foreground text-sm"
+        >
+          {adminCopy.backToTopics}
+        </Link>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-muted text-sm">{statusLabel}</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight">{english.title || topic.slug}</h1>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSection(section === "edit" ? "preview" : "edit")}
+              className="cursor-pointer rounded-full border border-[var(--border)] px-3 py-2 text-sm font-medium"
+            >
+              {section === "preview" ? adminCopy.backToEdit : adminCopy.preview}
+            </button>
           <button
             type="button"
             disabled={pending}
@@ -302,7 +354,7 @@ export function AdminTopicEditorForm({
                   setSlugLocked(true);
                   setHasDraft(false);
                   setConflict(false);
-                  setMessage("Published.");
+                  setMessage("Now live on the public site.");
                   router.refresh();
                   return;
                 }
@@ -332,7 +384,7 @@ export function AdminTopicEditorForm({
                     setVersion(result.version);
                     setIsLive(false);
                     setConflict(false);
-                    setMessage("Unpublished.");
+                    setMessage("Removed from the public site.");
                     router.refresh();
                     return;
                   }
@@ -349,6 +401,7 @@ export function AdminTopicEditorForm({
               {adminCopy.unpublish}
             </button>
           ) : null}
+        </div>
         </div>
       </div>
 
@@ -402,9 +455,9 @@ export function AdminTopicEditorForm({
                 onChange={(event) => setSlug(event.target.value)}
                 className="rounded-xl border border-[var(--border)] px-3 py-2 disabled:bg-[var(--surface-muted)]"
               />
-              {slugLocked ? (
-                <span className="text-muted text-xs">{adminCopy.slugLocked}</span>
-              ) : null}
+              <span className="text-muted text-xs">
+                {slugLocked ? adminCopy.slugLocked : adminCopy.slugHint}
+              </span>
             </label>
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium">{adminCopy.theme}</span>
@@ -415,18 +468,40 @@ export function AdminTopicEditorForm({
               >
                 {topicThemeKeys.map((key) => (
                   <option key={key} value={key}>
-                    {key}
+                    {themeLabel(key)}
                   </option>
                 ))}
               </select>
             </label>
+            <AdminArtworkPicker
+              assets={assets}
+              selectedId={artworkAssetId}
+              selectedSrc={artworkSrc}
+              alt={translation.artworkAlt || english.artworkAlt}
+              pending={pending}
+              onChange={applyArtwork}
+              onUploaded={(asset) => {
+                setAssets((current) =>
+                  current.some((item) => item.id === asset.id) ? current : [asset, ...current],
+                );
+              }}
+              onMessage={setMessage}
+              runPending={runPending}
+            />
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium">{adminCopy.focalPosition}</span>
-              <input
+              <select
                 value={focalPosition}
                 onChange={(event) => setFocalPosition(event.target.value)}
                 className="rounded-xl border border-[var(--border)] px-3 py-2"
-              />
+              >
+                {focalOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <span className="text-muted text-xs">{adminCopy.focalPositionHint}</span>
             </label>
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium">{adminCopy.knowledgeReviewDate}</span>
@@ -437,80 +512,6 @@ export function AdminTopicEditorForm({
                 className="rounded-xl border border-[var(--border)] px-3 py-2"
               />
             </label>
-            <div className="flex flex-col gap-2 text-sm">
-              <span className="font-medium">{adminCopy.artwork}</span>
-              <label className="flex flex-col gap-1">
-                <span className="text-muted text-xs">{adminCopy.existingArtwork}</span>
-                <select
-                  value={artworkAssetId}
-                  onChange={(event) => {
-                    const nextId = event.target.value;
-                    const selected = assets.find((asset) => asset.id === nextId);
-                    applyArtwork(nextId, selected?.artworkSrc);
-                  }}
-                  className="rounded-xl border border-[var(--border)] px-3 py-2"
-                >
-                  <option value="">{adminCopy.artworkNone}</option>
-                  {assets.map((asset) => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.storageKind === "bundled" ? asset.storageKey : asset.id}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={pending}
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (!file) {
-                    return;
-                  }
-                  const form = new FormData();
-                  form.set("file", file);
-                  void runPending(async () => {
-                    let response: Response;
-                    try {
-                      response = await fetch("/api/admin/artwork", { method: "POST", body: form });
-                    } catch {
-                      setMessage(adminCopy.networkError);
-                      return;
-                    }
-
-                    const payload = (await response.json()) as { assetId?: string; error?: string };
-                    if (!response.ok || !payload.assetId) {
-                      setMessage(payload.error ?? "Artwork could not be uploaded.");
-                      return;
-                    }
-                    const src = uploadedArtworkSrc(payload.assetId);
-                    setAssets((current) => {
-                      if (current.some((asset) => asset.id === payload.assetId)) {
-                        return current;
-                      }
-
-                      return [
-                        {
-                          id: payload.assetId!,
-                          storageKind: "uploaded",
-                          storageKey: payload.assetId!,
-                          artworkSrc: src,
-                        },
-                        ...current,
-                      ];
-                    });
-                    applyArtwork(payload.assetId, src);
-                  });
-                }}
-              />
-              <button
-                type="button"
-                className="text-muted w-fit cursor-pointer text-left text-xs"
-                onClick={() => applyArtwork("", undefined)}
-              >
-                {adminCopy.clearArtwork}
-              </button>
-            </div>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -536,67 +537,132 @@ export function AdminTopicEditorForm({
             />
           </div>
           <aside className="flex h-fit flex-col gap-3 rounded-[1.2rem] border border-[var(--border)] bg-white/80 p-4 text-sm">
-            <p className="font-medium">{adminCopy.apeProject}</p>
+            <div>
+              <p className="font-medium">{adminCopy.apeProject}</p>
+              <p className="text-muted mt-1 text-xs">{adminCopy.apeProjectHint}</p>
+            </div>
+            {selectedProjectName ? (
+              <p className="text-sm font-medium">{selectedProjectName}</p>
+            ) : null}
+            {pickerProjects.length > 0 ? (
+              <select
+                value={draftApeProjectId ?? ""}
+                disabled={pending}
+                onChange={(event) => {
+                  const nextId = event.target.value;
+                  setApeProjectId(nextId);
+                  setSelectedProjectName(
+                    pickerProjects.find((project) => project.id === nextId)?.name ?? null,
+                  );
+                  setProjectStatus(null);
+                  setMessage(nextId ? adminCopy.apeProjectSaved : null);
+                }}
+                className="rounded-xl border border-[var(--border)] px-3 py-2"
+              >
+                <option value="">{adminCopy.apeProjectChoose}</option>
+                {pickerProjects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+            {projectsUnavailable ? (
+              <p className="text-muted text-xs">{adminCopy.apeProjectListUnavailable}</p>
+            ) : null}
             <input
               value={apeProjectId}
-              onChange={(event) => setApeProjectId(event.target.value)}
-              placeholder="APE project UUID"
-              className="rounded-xl border border-[var(--border)] px-3 py-2"
+              onChange={(event) => {
+                const nextId = event.target.value;
+                setApeProjectId(nextId);
+                const named = pickerProjects.find((project) => project.id === nextId.trim());
+                setSelectedProjectName(named?.name ?? null);
+              }}
+              placeholder={adminCopy.apeProjectPlaceholder}
+              className="rounded-xl border border-[var(--border)] px-3 py-2 font-mono text-xs"
             />
-            <button
-              type="button"
-              className="cursor-pointer rounded-full border border-[var(--border)] px-3 py-2 font-medium"
-              onClick={() =>
-                void runPending(async () => {
-                  const result = await checkAdminApeProjectAction(apeProjectId);
-                  if (!result.ok) {
-                    setProjectStatus(result.message);
-                    return;
-                  }
-                  setProjectStatus(result.status);
-                })
-              }
-            >
-              {adminCopy.checkProject}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={pending || !apeProjectId.trim()}
+                className="cursor-pointer rounded-full border border-[var(--border)] px-3 py-2 font-medium disabled:opacity-60"
+                onClick={() =>
+                  void runPending(async () => {
+                    const result = await checkAdminApeProjectAction(apeProjectId);
+                    if (!result.ok) {
+                      setProjectStatus(result.message);
+                      return;
+                    }
+                    setProjectStatus(result.status);
+                    if (result.project) {
+                      setSelectedProjectName(result.project.name);
+                    }
+                  })
+                }
+              >
+                {adminCopy.checkProject}
+              </button>
+              {apeProjectId.trim() ? (
+                <button
+                  type="button"
+                  disabled={pending}
+                  className="cursor-pointer rounded-full border border-[var(--border)] px-3 py-2 font-medium disabled:opacity-60"
+                  onClick={() => {
+                    setApeProjectId("");
+                    setSelectedProjectName(null);
+                    setProjectStatus(null);
+                    setMessage(adminCopy.apeProjectSaved);
+                  }}
+                >
+                  {adminCopy.apeProjectClear}
+                </button>
+              ) : null}
+            </div>
             {projectStatus ? <p className="text-muted text-xs">{projectStatus}</p> : null}
-            <ul className="flex max-h-64 flex-col gap-1 overflow-auto">
-              {projects.map((project) => (
-                <li key={project.id}>
-                  <button
-                    type="button"
-                    className="hover:text-foreground w-full cursor-pointer truncate text-left text-xs"
-                    onClick={() => setApeProjectId(project.id)}
-                  >
-                    {project.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <button
-              type="button"
-              className="text-muted cursor-pointer text-left text-xs"
-              onClick={() =>
-                void runPending(async () => {
-                  const result = await listAdminApeProjectsAction({
-                    limit: 50,
-                    offset: projects.length,
-                  });
-                  if (result.ok) {
-                    setProjects((current) => [...current, ...result.items]);
-                    return;
-                  }
-                  setMessage(result.message);
-                })
-              }
-            >
-              Load more projects
-            </button>
+            {liveMappingDiffers ? (
+              <p className="text-muted text-xs">{adminCopy.apeProjectLiveDiffers}</p>
+            ) : null}
+            {projectsMayHaveMore ? (
+              <button
+                type="button"
+                className="text-muted cursor-pointer text-left text-xs"
+                onClick={() =>
+                  void runPending(async () => {
+                    const result = await listAdminApeProjectsAction({
+                      limit: 50,
+                      offset: projects.length,
+                    });
+                    if (result.ok) {
+                      const nextCount = projects.length + result.items.length;
+                      setProjects((current) => [...current, ...result.items]);
+                      setProjectsMayHaveMore(nextCount < result.total);
+                      return;
+                    }
+                    setMessage(result.message);
+                  })
+                }
+              >
+                {adminCopy.loadMoreProjects}
+              </button>
+            ) : null}
           </aside>
         </div>
       )}
     </div>
   );
+}
+
+function themeLabel(key: TopicThemeKey): string {
+  switch (key) {
+    case "tax":
+      return adminCopy.themeTax;
+    case "literature":
+      return adminCopy.themeLiterature;
+    case "history":
+      return adminCopy.themeHistory;
+    case "culture":
+      return adminCopy.themeCulture;
+  }
 }
 
 function TranslationFields({

@@ -22,7 +22,7 @@ Sessions are database-backed, HttpOnly, SameSite, eight hours, and checked on ev
 
 ## Topics
 
-Create, edit English/Bangla copy, upload or select existing artwork, clear artwork to the gradient fallback, preview the real landing card and workspace in the active EN/BN tab (conversation submit disabled), map an APE project, publish, unpublish, and reorder. Saving never mutates a live revision. After unpublish, the editor loads the retained revision. Concurrency conflicts keep entered text and offer keep-mine (refresh version, slug lock, and publication state) or restore-stored-draft. Network failures clear pending state, keep the form, and refresh server metadata before retry. Preview can show unsaved fields; publish requires a saved draft. Admin APE project and transcript reads use an 8-second server deadline.
+Create, edit English/Bangla copy, upload or select existing artwork, preview the selected image in a thumbnail (click to enlarge), clear artwork to the gradient fallback, preview the real landing card and workspace in the active EN/BN tab (conversation submit disabled), get and set the APE knowledge-project UUID on the topic revision (PostgreSQL, not env), publish, unpublish, and reorder. Saving never mutates a live revision. After unpublish, the editor loads the retained revision. Concurrency conflicts keep entered text and offer keep-mine (refresh version, slug lock, and publication state) or restore-stored-draft. Network failures clear pending state, keep the form, and refresh server metadata before retry. Preview can show unsaved fields; publish requires a saved draft. Admin APE project and transcript reads use an 8-second server deadline.
 
 ## Conversations
 
@@ -42,6 +42,6 @@ drizzle/0002_phase2_admin_feedback.sql
 ## Verification
 
 - Bootstrap, login, logout, signup disabled, unauthorized `/admin` and upload requests
-- Create → edit (including Enter in starter questions, Explore label, example preview, Bangla preview, artwork select/clear) → upload → map → publish → discover → unpublish → reopen retained content
+- Create → edit (including Enter in starter questions, Explore label, example preview, Bangla preview, artwork thumbnail/preview/select/clear) → upload → choose or paste APE project UUID → save draft → publish → discover → unpublish → reopen retained content
 - Save conflict: keep entered text, refresh version/slug-lock, or restore stored draft; network errors do not stick the editor in pending
 - Inspection paginates captured-project history; APE failure is an unavailable state

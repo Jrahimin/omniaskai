@@ -5,17 +5,13 @@ import { eq } from "drizzle-orm";
 
 import { getDatabase } from "@/lib/db/database";
 import { mediaAsset, topic } from "@/lib/db/schema";
-import { isUuid } from "../topic-validation-schema";
 import {
   catalogFixtureSchema,
   type CatalogFixture,
   type CatalogTopicInput,
 } from "../topic-validation-schema";
 import { newId } from "./topic-catalog-read";
-import {
-  catalogSeedFixtureV1,
-  seedApeProjectEnvByTopicId,
-} from "./catalog-seed-v1";
+import { catalogSeedFixtureV1 } from "./catalog-seed-v1";
 import {
   TopicConflictError,
   TopicNotFoundError,
@@ -56,12 +52,8 @@ export async function seedCatalog(options: {
   fixture?: CatalogFixture;
 } = {}): Promise<CatalogImportReport> {
   const fixture = options.fixture ?? catalogSeedFixtureV1;
-  const topics = fixture.topics.map((item) => ({
-    ...item,
-    apeProjectId: item.apeProjectId ?? envProjectId(item.id),
-  }));
 
-  return importCatalogTopics(topics, {
+  return importCatalogTopics(fixture.topics, {
     overwrite: false,
     publish: true,
     readProject: options.readProject,
@@ -262,12 +254,6 @@ async function getTopicBySlugOrId(slugOrId: string): Promise<{
   }
 
   throw new TopicNotFoundError();
-}
-
-function envProjectId(topicId: string): string | undefined {
-  const envName = seedApeProjectEnvByTopicId[topicId];
-  const value = envName ? process.env[envName]?.trim() : undefined;
-  return value && isUuid(value) ? value : undefined;
 }
 
 function errorMessage(error: unknown): string {

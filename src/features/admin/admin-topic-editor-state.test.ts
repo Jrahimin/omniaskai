@@ -5,10 +5,12 @@ import type { AdminTopicRevision } from "@/features/topics/admin-topic-types";
 import {
   adminEditorSource,
   editorSaveFingerprint,
+  knowledgeProjectsForPicker,
   normalizeMultilineList,
   recoveredEditorMetadata,
   toEditorTranslation,
   translationForSave,
+  artworkOptionLabel,
 } from "./admin-topic-editor-state";
 
 describe("admin topic editor state", () => {
@@ -107,5 +109,34 @@ describe("admin topic editor state", () => {
         english: { ...english, title: "Kept title" },
       }),
     ).not.toBe(editorSaveFingerprint(base));
+  });
+
+  it("labels bundled artwork by filename and uploaded artwork by a short id", () => {
+    expect(
+      artworkOptionLabel({
+        id: "47348101-d598-4261-9bc4-848335f5744b",
+        storageKind: "bundled",
+        storageKey: "topics/topic-income-tax.png",
+      }),
+    ).toBe("topic-income-tax.png");
+    expect(
+      artworkOptionLabel({
+        id: "99810c9e-2e97-4de1-b54b-870031d1ed0f",
+        storageKind: "uploaded",
+        storageKey: "99810c9e-2e97-4de1-b54b-870031d1ed0f",
+      }),
+    ).toBe("Uploaded · 99810c9e");
+  });
+
+  it("keeps a stored project in the picker when it is not on the first APE page", () => {
+    const listed = [{ id: "660e8400-e29b-41d4-a716-446655440002", name: "Literature" }];
+    const storedId = "660e8400-e29b-41d4-a716-446655440001";
+
+    expect(knowledgeProjectsForPicker(listed, storedId, "Income Tax")).toEqual([
+      { id: storedId, name: "Income Tax" },
+      ...listed,
+    ]);
+    expect(knowledgeProjectsForPicker(listed, listed[0]!.id, "Literature")).toEqual(listed);
+    expect(knowledgeProjectsForPicker(listed, "", null)).toEqual(listed);
   });
 });

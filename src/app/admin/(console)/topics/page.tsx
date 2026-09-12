@@ -14,10 +14,13 @@ export default async function AdminTopicsPage() {
   return (
     <main id="main" tabIndex={-1}>
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">{adminCopy.topics}</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{adminCopy.topics}</h1>
+          <p className="text-muted mt-1 text-sm">{adminCopy.topicsListHint}</p>
+        </div>
         <Link
           href="/admin/topics/new"
-          className="bg-brand rounded-full px-3.5 py-2 text-sm font-semibold text-white"
+          className="bg-brand shrink-0 rounded-full px-3.5 py-2 text-sm font-semibold text-white"
         >
           {adminCopy.newTopic}
         </Link>

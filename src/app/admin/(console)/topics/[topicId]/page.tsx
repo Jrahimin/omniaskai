@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 
 import { AdminTopicEditorForm } from "@/features/admin/admin-topic-editor-form";
-import { listAdminApeProjectsAction } from "@/features/admin/admin-topic-actions";
+import { loadAdminApeEditorProjectsAction } from "@/features/admin/admin-topic-actions";
 import { requireAdminPageSession } from "@/features/admin/require-admin-session";
+import { adminEditorSource } from "@/features/admin/admin-topic-editor-state";
 import {
   getAdminTopicEditor,
   listAdminArtworkAssets,
@@ -20,16 +21,19 @@ export default async function AdminTopicEditPage({ params }: AdminTopicEditPageP
   const { topicId } = await params;
   let topic;
   let artworkOptions: Awaited<ReturnType<typeof listAdminArtworkAssets>> = [];
-  let projects: Awaited<ReturnType<typeof listAdminApeProjectsAction>> = {
-    ok: false,
-    code: "unreachable",
-    message: "",
+  let apeProjects: Awaited<ReturnType<typeof loadAdminApeEditorProjectsAction>> = {
+    items: [],
+    total: 0,
+    storedProject: null,
+    listUnavailable: true,
   };
 
   try {
     topic = await getAdminTopicEditor(topicId);
     artworkOptions = await listAdminArtworkAssets();
-    projects = await listAdminApeProjectsAction({ limit: 20, offset: 0 });
+    apeProjects = await loadAdminApeEditorProjectsAction(
+      adminEditorSource(topic)?.apeProjectId ?? null,
+    );
   } catch (error) {
     if (error instanceof TopicNotFoundError) {
       notFound();
@@ -42,7 +46,10 @@ export default async function AdminTopicEditPage({ params }: AdminTopicEditPageP
     <main id="main" tabIndex={-1}>
       <AdminTopicEditorForm
         topic={topic}
-        initialProjects={projects.ok ? projects.items : []}
+        initialProjects={apeProjects.items}
+        projectsTotal={apeProjects.total}
+        storedProject={apeProjects.storedProject}
+        projectsUnavailable={apeProjects.listUnavailable}
         artworkOptions={artworkOptions}
       />
     </main>

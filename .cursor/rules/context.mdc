@@ -218,7 +218,7 @@ omniaskai/
 * APE remains the only RAG/AI infrastructure layer.
 * APE credentials are server-side only.
 * Topic and APE Project remain separate concepts.
-* Topic → APE Project mapping is stored on each published revision in PostgreSQL. Legacy `APE_PROJECT_*` env vars are seed/bootstrap only.
+* Topic → APE Project mapping is stored on each revision in PostgreSQL and set from Admin. Seed does not read `APE_PROJECT_*` env vars.
 * APE credentials and raw conversation ids stay server-side; the browser holds a sealed continuation token that contains the local conversation-reference ID.
 * Public topic reads are request-scoped and uncached across requests.
 * Topic behavior should be configuration-driven where practical.
@@ -244,6 +244,7 @@ Finish Phase 2 merge checks, then Phase 3 — public users and retention
 Topic data:
 PostgreSQL catalog with draft/live revisions
 Four seeded topics; publish only when the APE mapping validates
+APE project UUID is get/set in Admin and stored on the revision
 Presentation is a projection of persisted theme/artwork/copy
 Bundled public/ artwork plus uploaded files under MEDIA_STORAGE_DIR
 Uploaded artwork is served at /media/[assetId]
@@ -267,7 +268,8 @@ Admin:
 Better Auth Superadmin at /admin (Topics + Conversations)
 Bootstrap: npm run admin:create (non-echoing password prompt)
 Uploads, existing-artwork select/clear, EN/BN preview,
-publish/unpublish, retained-revision editor, captured-project
+APE project get/set on the topic revision, publish/unpublish,
+retained-revision editor, captured-project
 paginated inspection
 Integration tests require TEST_DATABASE_URL (`*_test` database)
 ```

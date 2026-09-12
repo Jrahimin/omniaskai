@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { topicThemeKeys } from "@/features/topics/topic-theme";
+import { topicThemeKeys, type TopicThemeKey } from "@/features/topics/topic-theme";
 
 import { adminCopy } from "./admin-copy";
 import { createAdminTopicAction } from "./admin-topic-actions";
@@ -39,6 +39,7 @@ export function AdminTopicCreateForm() {
           placeholder="income-tax"
           className="rounded-xl border border-[var(--border)] px-3 py-2"
         />
+        <span className="text-muted text-xs">{adminCopy.slugHint}</span>
       </label>
       <label className="flex flex-col gap-1 text-sm">
         <span className="font-medium">{adminCopy.titleField}</span>
@@ -53,7 +54,7 @@ export function AdminTopicCreateForm() {
         <select name="themeKey" className="rounded-xl border border-[var(--border)] px-3 py-2">
           {topicThemeKeys.map((key) => (
             <option key={key} value={key}>
-              {key}
+              {themeLabel(key)}
             </option>
           ))}
         </select>
@@ -68,4 +69,17 @@ export function AdminTopicCreateForm() {
       </button>
     </form>
   );
+}
+
+function themeLabel(key: TopicThemeKey): string {
+  switch (key) {
+    case "tax":
+      return adminCopy.themeTax;
+    case "literature":
+      return adminCopy.themeLiterature;
+    case "history":
+      return adminCopy.themeHistory;
+    case "culture":
+      return adminCopy.themeCulture;
+  }
 }

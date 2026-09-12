@@ -45,7 +45,7 @@ npm run catalog -- publish <slug>
 npm run catalog -- unpublish <slug>
 ```
 
-Seed is insert-if-missing. Existing records stay untouched, including publication state. Newly created complete topics may publish when their APE mapping validates; releasing a saved draft requires `catalog -- publish`. Legacy `APE_PROJECT_*` env vars are used only during seed/bootstrap.
+Seed is insert-if-missing. Existing records stay untouched, including publication state. Newly created topics stay drafts until an operator maps an APE project in Admin and publishes. Catalog JSON may still include `apeProjectId` for bulk import.
 
 ## Files
 
@@ -71,6 +71,7 @@ Missing artwork renders a gradient. Uploaded artwork is stored under `MEDIA_STOR
 ## Verification
 
 - Fresh migrate/seed; repeated seed neither duplicates, overwrites, nor republishes unpublished topics
+- Seed does not attach APE projects from env; Admin save persists the mapping on the draft revision
 - Fifth topic JSON import appears in discovery after publish
 - Drafts stay private; publish/unpublish/order are atomic
 - Slug uniqueness, cross-topic revision rejection, concurrent draft saves

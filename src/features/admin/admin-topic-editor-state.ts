@@ -1,4 +1,5 @@
 import type {
+  AdminArtworkOption,
   AdminTopicEditor,
   AdminTopicRevision,
   AdminTopicTranslation,
@@ -130,6 +131,39 @@ export function editorSaveFingerprint(input: {
     bangla: input.includeBangla ? translationForSave(input.bangla) : null,
   });
 }
+
+export function knowledgeProjectsForPicker(
+  projects: Array<{ id: string; name: string }>,
+  selectedId: string,
+  selectedName?: string | null,
+): Array<{ id: string; name: string }> {
+  const trimmed = selectedId.trim();
+
+  if (!trimmed || projects.some((project) => project.id === trimmed)) {
+    return projects;
+  }
+
+  return [{ id: trimmed, name: selectedName?.trim() || trimmed }, ...projects];
+}
+
+export function artworkOptionLabel(
+  asset: Pick<AdminArtworkOption, "id" | "storageKind" | "storageKey">,
+): string {
+  if (asset.storageKind === "bundled") {
+    return asset.storageKey.replace(/^topics\//, "");
+  }
+
+  return `Uploaded · ${asset.id.slice(0, 8)}`;
+}
+
+export const artworkPositionOptions = [
+  { value: "center", label: "Center" },
+  { value: "left center", label: "Left" },
+  { value: "right center", label: "Right" },
+  { value: "center top", label: "Top" },
+  { value: "center bottom", label: "Bottom" },
+  { value: "left 40%", label: "Left, slightly up" },
+] as const;
 
 function normalizedPreview(
   translation: EditorTranslation,

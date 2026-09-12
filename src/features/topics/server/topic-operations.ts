@@ -15,6 +15,7 @@ import {
 } from "@/lib/db/schema";
 import type { TopicThemeKey } from "../topic-theme";
 import {
+  isUuid,
   publishEnglishTranslationSchema,
   toPublishEnglishInput,
   topicSlugSchema,
@@ -120,7 +121,7 @@ export async function createTopic(input: CreateTopicInput): Promise<{
       if (input.apeProjectId) {
         await tx.insert(topicKnowledgeMapping).values({
           revisionId,
-          apeProjectId: input.apeProjectId,
+          apeProjectId: parseApeProjectId(input.apeProjectId),
           lastValidationResult: null,
           lastValidatedAt: null,
         });
@@ -240,18 +241,19 @@ export async function saveTopicDraft(input: SaveTopicDraftInput): Promise<{
           .delete(topicKnowledgeMapping)
           .where(eq(topicKnowledgeMapping.revisionId, draftId));
       } else if (input.apeProjectId) {
+        const apeProjectId = parseApeProjectId(input.apeProjectId);
         await tx
           .insert(topicKnowledgeMapping)
           .values({
             revisionId: draftId,
-            apeProjectId: input.apeProjectId,
+            apeProjectId,
             lastValidationResult: null,
             lastValidatedAt: null,
           })
           .onConflictDoUpdate({
             target: topicKnowledgeMapping.revisionId,
             set: {
-              apeProjectId: input.apeProjectId,
+              apeProjectId,
               lastValidationResult: null,
               lastValidatedAt: null,
             },
@@ -677,6 +679,16 @@ async function cloneRevisionAsDraft(
   }
 
   return revisionId;
+}
+
+function parseApeProjectId(value: string): string {
+  const apeProjectId = value.trim();
+
+  if (!isUuid(apeProjectId)) {
+    throw new TopicValidationError("Enter a valid APE project UUID.");
+  }
+
+  return apeProjectId;
 }
 
 async function insertTranslation(

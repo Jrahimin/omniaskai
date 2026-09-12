@@ -97,6 +97,12 @@ export async function saveAdminTopicDraftAction(
       topicTranslationDraftSchema.parse(input.translations.bn);
     }
 
+    if (input.apeProjectId) {
+      if (!isUuid(input.apeProjectId.trim())) {
+        return { ok: false, code: "invalid", message: "Enter a valid APE project UUID." };
+      }
+    }
+
     const saved = await saveTopicDraft(input);
     revalidateAdminAndPublic();
     return { ok: true, version: saved.version };
@@ -213,6 +219,48 @@ export async function listAdminApeProjectsAction(paging: {
     }
 
     return { ok: false, code: "unreachable", message: "APE projects could not be listed." };
+  }
+}
+
+export async function loadAdminApeEditorProjectsAction(storedProjectId: string | null): Promise<{
+  items: ApeProjectRecord[];
+  total: number;
+  storedProject: ApeProjectRecord | null;
+  listUnavailable: boolean;
+}> {
+  try {
+    await requireAdminSession();
+    const config = getApeRuntimeConfig();
+
+    if (!config) {
+      return { items: [], total: 0, storedProject: null, listUnavailable: true };
+    }
+
+    const listed = await listApeProjects(config, { limit: 50, offset: 0 });
+    const items = listed.status === "ok" ? listed.items : [];
+    const total = listed.status === "ok" ? listed.total : 0;
+    let storedProject: ApeProjectRecord | null =
+      storedProjectId && isUuid(storedProjectId)
+        ? (items.find((project) => project.id === storedProjectId) ?? null)
+        : null;
+
+    if (storedProjectId && isUuid(storedProjectId) && !storedProject) {
+      const result = await getApeProject(config, storedProjectId);
+      storedProject = result.status === "ok" ? result.project : null;
+    }
+
+    return {
+      items,
+      total,
+      storedProject,
+      listUnavailable: listed.status !== "ok",
+    };
+  } catch (error) {
+    if (isAdminUnauthorizedError(error)) {
+      throw error;
+    }
+
+    return { items: [], total: 0, storedProject: null, listUnavailable: true };
   }
 }
 

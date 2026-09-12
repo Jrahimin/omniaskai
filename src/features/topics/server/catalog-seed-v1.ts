@@ -228,10 +228,3 @@ export const catalogSeedFixtureV1: CatalogFixture = {
     },
   ],
 };
-
-export const seedApeProjectEnvByTopicId: Record<string, string> = {
-  topic_income_tax: "APE_PROJECT_INCOME_TAX",
-  topic_literature: "APE_PROJECT_LITERATURE",
-  topic_bangladesh_history: "APE_PROJECT_BANGLADESH_HISTORY",
-  topic_movies_culture: "APE_PROJECT_MOVIES_CULTURE",
-};

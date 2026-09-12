@@ -53,21 +53,22 @@ export function AdminTopicList({ topics }: AdminTopicListProps) {
               {topic.title}
             </Link>
             <p className="text-muted text-xs">
-              {topic.slug} · {topic.isLive ? adminCopy.statusLive : adminCopy.statusUnpublished}
-              {topic.hasDraft ? ` · ${adminCopy.statusDraft}` : ""}
+              {topic.slug} · {topicStatus(topic)}
             </p>
           </div>
           <div className="flex shrink-0 gap-1">
             <button
               type="button"
-              className="text-muted cursor-pointer rounded-full px-2 py-1 text-xs"
+              disabled={index === 0}
+              className="text-muted cursor-pointer rounded-full px-2 py-1 text-xs disabled:cursor-default disabled:opacity-30"
               onClick={() => void move(index, -1)}
             >
               {adminCopy.moveUp}
             </button>
             <button
               type="button"
-              className="text-muted cursor-pointer rounded-full px-2 py-1 text-xs"
+              disabled={index === topics.length - 1}
+              className="text-muted cursor-pointer rounded-full px-2 py-1 text-xs disabled:cursor-default disabled:opacity-30"
               onClick={() => void move(index, 1)}
             >
               {adminCopy.moveDown}
@@ -77,4 +78,20 @@ export function AdminTopicList({ topics }: AdminTopicListProps) {
       ))}
     </ul>
   );
+}
+
+function topicStatus(topic: AdminTopicSummary): string {
+  if (topic.isLive && topic.hasDraft) {
+    return `${adminCopy.statusLive} · ${adminCopy.statusDraftWaiting}`;
+  }
+
+  if (topic.isLive) {
+    return adminCopy.statusLive;
+  }
+
+  if (topic.hasDraft) {
+    return adminCopy.statusDraft;
+  }
+
+  return adminCopy.statusUnpublished;
 }

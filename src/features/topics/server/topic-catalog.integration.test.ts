@@ -427,4 +427,85 @@ describe.sequential("topic catalog persistence", () => {
     expect(after.slug).toBe("alpha");
     expect(after.draft?.translations.en.title).toBe("Kept title");
   });
+
+  it("seeds v1 topics as drafts without APE mapping even when env project ids are set", async () => {
+    const previous = process.env.APE_PROJECT_INCOME_TAX;
+    process.env.APE_PROJECT_INCOME_TAX = PROJECT_ONE;
+
+    try {
+      const report = await seedCatalog({
+        fixture: {
+          version: 1,
+          topics: catalogSeedFixtureV1.topics.slice(0, 1),
+        },
+        readProject: validReadProject,
+      });
+
+      expect(report.created).toEqual(["topic_income_tax"]);
+      expect(report.published).toEqual([]);
+      expect(report.drafts).toContain("topic_income_tax");
+
+      const editor = await getAdminTopicEditor("topic_income_tax");
+      expect(editor.draft?.apeProjectId).toBeNull();
+      expect(editor.isLive).toBe(false);
+    } finally {
+      if (previous === undefined) {
+        delete process.env.APE_PROJECT_INCOME_TAX;
+      } else {
+        process.env.APE_PROJECT_INCOME_TAX = previous;
+      }
+    }
+  });
+
+  it("saves, updates, and clears the APE project mapping on the draft revision", async () => {
+    await createTopic({
+      id: "topic_alpha",
+      slug: "alpha",
+      themeKey: "tax",
+      translations: { en: english("Alpha") },
+    });
+
+    const created = await getAdminTopicEditor("topic_alpha");
+    expect(created.draft?.apeProjectId).toBeNull();
+
+    await saveTopicDraft({
+      topicId: "topic_alpha",
+      expectedVersion: created.version,
+      apeProjectId: PROJECT_ONE,
+    });
+    expect((await getAdminTopicEditor("topic_alpha")).draft?.apeProjectId).toBe(PROJECT_ONE);
+
+    const afterSet = await getAdminTopicEditor("topic_alpha");
+    await saveTopicDraft({
+      topicId: "topic_alpha",
+      expectedVersion: afterSet.version,
+      apeProjectId: PROJECT_TWO,
+    });
+    expect((await getAdminTopicEditor("topic_alpha")).draft?.apeProjectId).toBe(PROJECT_TWO);
+
+    const afterUpdate = await getAdminTopicEditor("topic_alpha");
+    await saveTopicDraft({
+      topicId: "topic_alpha",
+      expectedVersion: afterUpdate.version,
+      apeProjectId: null,
+    });
+    expect((await getAdminTopicEditor("topic_alpha")).draft?.apeProjectId).toBeNull();
+  });
+
+  it("rejects an invalid APE project UUID on draft save", async () => {
+    await createTopic({
+      id: "topic_alpha",
+      slug: "alpha",
+      themeKey: "tax",
+      translations: { en: english("Alpha") },
+    });
+
+    await expect(
+      saveTopicDraft({
+        topicId: "topic_alpha",
+        expectedVersion: 1,
+        apeProjectId: "not-a-project-id",
+      }),
+    ).rejects.toBeInstanceOf(TopicValidationError);
+  });
 });

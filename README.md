@@ -23,7 +23,7 @@ npm run dev
 
 Open [http://localhost:3011](http://localhost:3011). Admin is at [http://localhost:3011/admin](http://localhost:3011/admin).
 
-Seed is insert-if-missing. Existing topics, including unpublished operator drafts, stay untouched. Newly created complete topics may publish when their APE mapping validates. Use `catalog -- publish <slug>` to release a saved draft. Legacy `APE_PROJECT_*` variables are used during seed only.
+Seed is insert-if-missing. Existing topics, including unpublished operator drafts, stay untouched. Newly created topics stay drafts until an APE project is mapped in Admin and published. Use `catalog -- publish <slug>` to release a saved draft.
 
 Uploaded artwork lives in `MEDIA_STORAGE_DIR` (outside app releases) and is served from `/media/[assetId]`. Back up that directory independently. Local conversation references/feedback and APE transcripts have separate retention; Phase 2 does not delete them automatically.
 
