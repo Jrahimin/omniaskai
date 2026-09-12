@@ -243,18 +243,21 @@ Caching must be intentional.
 
 Classify data first:
 
-### Public stable/configuration data
+### Public topic catalog
+
+Public topic reads are **fresh PostgreSQL queries on every request**. React `cache()` only deduplicates work inside a single request (for example landing HTML and metadata). There is no shared or cross-request topic cache.
+
+Landing and topic workspace routes set `dynamic = "force-dynamic"` so production builds do not query the catalog or APE.
+
+### Other public stable/configuration data
 
 Examples:
 
-* topic details
-* topic themes
-* suggested questions
-* public landing content
+* global marketing/interface copy
+* theme CSS presets
+* locale cookie
 
-Use Next.js server caching where beneficial.
-
-Invalidate by meaningful tags/events when Admin updates or publishes data.
+These remain code-owned and can use ordinary Next.js rendering. Do not add a second cache over the same PostgreSQL topic rows.
 
 ### User-specific data
 

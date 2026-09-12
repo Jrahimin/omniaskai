@@ -87,6 +87,7 @@ export function workspaceSessionReducer(
           followUps: action.payload.followUps,
           sourceProvenance: action.payload.sourceProvenance,
           retryable: undefined,
+          publicOperationId: action.payload.operationId,
         })),
         sources: mergeConversationSources(state.sources, action.payload.sources),
         operationId: null,

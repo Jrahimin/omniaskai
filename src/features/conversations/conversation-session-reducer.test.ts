@@ -144,12 +144,14 @@ describe("workspaceSessionReducer", () => {
         sourceIds: [],
         sourceProvenance: "none",
         followUps: [],
+        operationId: "op-1",
       },
     });
     const assistant = final.conversations[0]?.turns[1] as AssistantTurn;
 
     expect(assistant.status).toBe("grounded");
     expect(assistant.sourceProvenance).toBe("none");
+    expect(assistant.publicOperationId).toBe("op-1");
     expect(final.operationId).toBeNull();
   });
 

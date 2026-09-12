@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "topics": [
+    {
+      "id": "topic_laws_and_regulations",
+      "slug": "laws-and-regulations",
+      "sortOrder": 5,
+      "themeKey": "tax",
+      "focalPosition": "center",
+      "knowledgeReviewDate": "2026-01-15",
+      "translations": {
+        "en": {
+          "title": "Laws and Regulations",
+          "landingDescription": "Read statutes and guidance in plain language, with the source still in reach.",
+          "workspaceSubtitle": "Statutes, rules, and official notes",
+          "aboutDescription": "Ask about a section, a definition, or a procedure. Answers stay with the cited text instead of a generic legal summary.",
+          "sourceDescription": "Statutes, rules, and official notes",
+          "artworkAlt": "Laws and regulations workspace",
+          "composerPlaceholder": "Ask about a law, rule, or procedure…",
+          "exploreLabel": "Explore Laws and Regulations",
+          "preview": {
+            "youLabel": "You",
+            "assistantLabel": "OmniAskAI",
+            "question": "What is a statutory instrument?",
+            "answer": "It is a form of secondary legislation made under an Act. The exact force depends on the parent statute and how the instrument was issued.",
+            "sources": ["Interpretation notes", "Official gazette"]
+          },
+          "starterQuestions": [
+            "What is a statutory instrument?",
+            "How do I read a section number in an Act?",
+            "Ainer byakhya kothay pawa jay?"
+          ]
+        },
+        "bn": {
+          "title": "আইন ও বিধি",
+          "landingDescription": "আইন ও নির্দেশনা সহজ ভাষায় পড়ুন, উৎস হাতের কাছে রেখে।",
+          "workspaceSubtitle": "আইন, বিধি ও সরকারি নোট",
+          "aboutDescription": "ধারা, সংজ্ঞা বা পদ্ধতি নিয়ে জিজ্ঞাসা করুন। উত্তর উদ্ধৃত পাঠের সাথে থাকে, সাধারণ সারাংশের সাথে নয়।",
+          "sourceDescription": "আইন, বিধি ও সরকারি নোট",
+          "artworkAlt": "আইন ও বিধি কর্মপরিসর",
+          "composerPlaceholder": "আইন, বিধি বা পদ্ধতি নিয়ে জিজ্ঞাসা করুন…",
+          "starterQuestions": []
+        }
+      }
+    }
+  ]
+}

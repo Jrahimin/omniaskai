@@ -44,6 +44,7 @@ type ConversationWorkspaceIslandProps = {
   identity: TopicIdentityCopy;
   presentation: TopicPresentation;
   workspace: TopicWorkspace;
+  conversationEnabled?: boolean;
 };
 
 export function ConversationWorkspaceIsland({
@@ -52,6 +53,7 @@ export function ConversationWorkspaceIsland({
   identity,
   presentation,
   workspace,
+  conversationEnabled = true,
 }: ConversationWorkspaceIslandProps) {
   const guideTitleId = useId();
   const railSearchId = useId();
@@ -80,9 +82,17 @@ export function ConversationWorkspaceIsland({
   const [helpfulByAnswer, setHelpfulByAnswer] = useState<
     Record<string, "up" | "down" | null>
   >({});
+  const [helpfulPendingId, setHelpfulPendingId] = useState<string | null>(null);
+  const [helpfulErrorByAnswer, setHelpfulErrorByAnswer] = useState<
+    Record<string, true>
+  >({});
   const [copiedAnswerId, setCopiedAnswerId] = useState<string | null>(null);
 
-  const guide = resolveWorkspaceGuide(copy, workspace.starterQuestions);
+  const guide = resolveWorkspaceGuide(
+    copy,
+    workspace.starterQuestions,
+    identity.aboutBody,
+  );
   const pending = session.operationId !== null;
   const activeConversationBlocked = session.activeConversationId
     ? session.blockedConversationIds[session.activeConversationId] === true
@@ -240,11 +250,72 @@ export function ConversationWorkspaceIsland({
   }
 
   function handleFollowUp(text: string) {
+    if (!conversationEnabled) {
+      return;
+    }
+
     setDraft(text);
     document.getElementById("workspace-composer")?.focus();
   }
 
+  async function handleHelpful(answerId: string, value: "up" | "down") {
+    const conversationId = session.activeConversationId;
+    const conversation = session.conversations.find(
+      (item) => item.id === conversationId,
+    );
+    const turn = conversation?.turns.find(
+      (item) => item.id === answerId && item.role === "assistant",
+    );
+    const operationId =
+      turn && turn.role === "assistant" ? turn.publicOperationId : undefined;
+    const continuationToken = conversationId
+      ? session.continuationTokens[conversationId]
+      : undefined;
+
+    if (!operationId || !continuationToken) {
+      setHelpfulErrorByAnswer((current) => ({ ...current, [answerId]: true }));
+      return;
+    }
+
+    const previous = helpfulByAnswer[answerId] ?? null;
+    const next = previous === value ? null : value;
+    setHelpfulPendingId(answerId);
+    setHelpfulErrorByAnswer((current) => {
+      const nextErrors = { ...current };
+      delete nextErrors[answerId];
+      return nextErrors;
+    });
+    setHelpfulByAnswer((current) => ({ ...current, [answerId]: next }));
+
+    try {
+      const response = await fetch(
+        `/api/conversation-turns/${operationId}/feedback`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            continuationToken,
+            rating: next,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("feedback");
+      }
+    } catch {
+      setHelpfulByAnswer((current) => ({ ...current, [answerId]: previous }));
+      setHelpfulErrorByAnswer((current) => ({ ...current, [answerId]: true }));
+    } finally {
+      setHelpfulPendingId((current) => (current === answerId ? null : current));
+    }
+  }
+
   function handleGuideExample(question: string) {
+    if (!conversationEnabled) {
+      return;
+    }
+
     handleFollowUp(question);
     closeDialog(guideDialogRef);
   }
@@ -263,7 +334,12 @@ export function ConversationWorkspaceIsland({
   function handleSubmit() {
     const text = draft;
 
-    if (!text.trim() || pending || activeConversationBlocked) {
+    if (
+      !conversationEnabled ||
+      !text.trim() ||
+      pending ||
+      activeConversationBlocked
+    ) {
       return;
     }
 
@@ -376,8 +452,6 @@ export function ConversationWorkspaceIsland({
       <ConversationHistorySidebar
         copy={copy}
         searchInputId={searchInputId}
-        exploreItemIds={workspace.exploreItemIds}
-        exploreLabels={identity.exploreItems}
         conversations={session.conversations}
         activeConversationId={session.activeConversationId}
         search={search}
@@ -462,16 +536,13 @@ export function ConversationWorkspaceIsland({
                 activeAnswerId={activeAnswer?.id ?? null}
                 selectedSourceId={selectedSourceId}
                 helpfulByAnswer={helpfulByAnswer}
+                helpfulPendingId={helpfulPendingId}
+                helpfulErrorByAnswer={helpfulErrorByAnswer}
                 copiedAnswerId={copiedAnswerId}
                 onCitation={handleCitation}
                 onOpenSources={handleOpenSources}
                 onCopy={handleCopy}
-                onHelpful={(answerId, value) =>
-                  setHelpfulByAnswer((current) => ({
-                    ...current,
-                    [answerId]: current[answerId] === value ? null : value,
-                  }))
-                }
+                onHelpful={handleHelpful}
                 onFollowUp={handleFollowUp}
               />
             </main>
@@ -479,7 +550,9 @@ export function ConversationWorkspaceIsland({
               copy={copy}
               placeholder={identity.composerPlaceholder}
               value={draft}
-              disabled={pending || activeConversationBlocked}
+              disabled={
+                !conversationEnabled || pending || activeConversationBlocked
+              }
               onChange={setDraft}
               onSubmit={handleSubmit}
             />

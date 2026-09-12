@@ -11,6 +11,7 @@ type TopicKnowledgeCardProps = {
   copy: TopicCardCopy;
   presentation: TopicPresentation;
   priority?: boolean;
+  interactive?: boolean;
 };
 
 export function TopicKnowledgeCard({
@@ -18,23 +19,29 @@ export function TopicKnowledgeCard({
   copy,
   presentation,
   priority = false,
+  interactive = true,
 }: TopicKnowledgeCardProps) {
-  return (
-    <Link
-      href={`/topics/${slug}`}
-      aria-label={copy.explore}
-      className="topic-world-card group relative flex h-full min-h-[22rem] overflow-hidden rounded-[1.55rem] min-[1024px]:min-h-[20rem] min-[1280px]:min-h-[22rem]"
-      data-mood={presentation.mood}
-    >
-      <Image
-        src={presentation.artworkSrc}
-        alt=""
-        fill
-        priority={priority}
-        sizes="(min-width: 1360px) 640px, (min-width: 1024px) 48vw, 100vw"
-        className="object-cover"
-        style={{ objectPosition: presentation.objectPosition }}
-      />
+  const className =
+    "topic-world-card group relative flex h-full min-h-[22rem] overflow-hidden rounded-[1.55rem] min-[1024px]:min-h-[20rem] min-[1280px]:min-h-[22rem]";
+
+  const body = (
+    <>
+      {presentation.artworkSrc ? (
+        <Image
+          src={presentation.artworkSrc}
+          alt=""
+          fill
+          priority={priority}
+          sizes="(min-width: 1360px) 640px, (min-width: 1024px) 48vw, 100vw"
+          className="object-cover"
+          style={{ objectPosition: presentation.objectPosition }}
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          className="topic-world-card-fallback absolute inset-0"
+        />
+      )}
       <div
         aria-hidden="true"
         className="absolute inset-0"
@@ -66,38 +73,43 @@ export function TopicKnowledgeCard({
           </p>
           <p className="mt-auto hidden w-fit items-center gap-1.5 rounded-full bg-black/18 px-2.5 py-1 text-xs font-medium text-white/92 ring-1 ring-white/15 min-[1024px]:mt-8 min-[1024px]:flex">
             <SourcesIcon className="size-3.5" />
-            {copy.sourceCount}
+            {copy.sourceDescription}
           </p>
         </div>
 
         <div className="flex min-h-0 flex-col">
-          <div className="rounded-[1.15rem] bg-white/58 p-3.5 shadow-[0_16px_36px_rgba(12,18,32,0.14),inset_0_1px_0_rgba(255,255,255,0.7)] ring-1 ring-white/70 backdrop-blur-md">
-            <p className="text-muted text-[0.65rem] font-semibold tracking-wide uppercase">
-              {copy.preview.youLabel}
-            </p>
-            <p className="text-foreground mt-1 text-[0.8rem] leading-snug">
-              {copy.preview.question}
-            </p>
-            <p className="text-muted mt-3 text-[0.65rem] font-semibold tracking-wide uppercase">
-              {copy.preview.assistantLabel}
-            </p>
-            <p className="text-foreground mt-1 line-clamp-4 text-[0.8rem] leading-snug">
-              {copy.preview.answer}
-            </p>
-            <ul className="mt-3 flex flex-wrap gap-1.5">
-              {copy.preview.sources.map((source) => (
-                <li
-                  key={source}
-                  className="rounded-full bg-white/78 px-2 py-0.5 text-[0.65rem] font-medium text-[#3d4450] shadow-[0_1px_0_rgba(255,255,255,0.8)]"
-                >
-                  {source}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {copy.preview ? (
+            <div className="rounded-[1.15rem] bg-white/58 p-3.5 shadow-[0_16px_36px_rgba(12,18,32,0.14),inset_0_1px_0_rgba(255,255,255,0.7)] ring-1 ring-white/70 backdrop-blur-md">
+              <p className="text-muted text-[0.65rem] font-semibold tracking-wide uppercase">
+                {copy.exampleLabel}
+              </p>
+              <p className="text-muted mt-2 text-[0.65rem] font-semibold tracking-wide uppercase">
+                {copy.preview.youLabel}
+              </p>
+              <p className="text-foreground mt-1 text-[0.8rem] leading-snug">
+                {copy.preview.question}
+              </p>
+              <p className="text-muted mt-3 text-[0.65rem] font-semibold tracking-wide uppercase">
+                {copy.preview.assistantLabel}
+              </p>
+              <p className="text-foreground mt-1 line-clamp-4 text-[0.8rem] leading-snug">
+                {copy.preview.answer}
+              </p>
+              <ul className="mt-3 flex flex-wrap gap-1.5">
+                {copy.preview.sources.map((source) => (
+                  <li
+                    key={source}
+                    className="rounded-full bg-white/78 px-2 py-0.5 text-[0.65rem] font-medium text-[#3d4450] shadow-[0_1px_0_rgba(255,255,255,0.8)]"
+                  >
+                    {source}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           <p className="mt-3 flex w-fit items-center gap-1.5 rounded-full bg-black/18 px-2.5 py-1 text-xs font-medium text-white/92 ring-1 ring-white/15 min-[1024px]:hidden">
             <SourcesIcon className="size-3.5" />
-            {copy.sourceCount}
+            {copy.sourceDescription}
           </p>
           <p
             aria-hidden="true"
@@ -112,6 +124,25 @@ export function TopicKnowledgeCard({
           </p>
         </div>
       </div>
+    </>
+  );
+
+  if (!interactive) {
+    return (
+      <div className={className} data-mood={presentation.mood}>
+        {body}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/topics/${slug}`}
+      aria-label={copy.explore}
+      className={className}
+      data-mood={presentation.mood}
+    >
+      {body}
     </Link>
   );
 }

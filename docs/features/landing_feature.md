@@ -5,24 +5,18 @@ Public discovery page for OmniAskAI. Visitors should understand that this is **c
 ```text
 Discover
    ↓
-Browse topics
+Browse published topics
    ↓
 Explore → /topics/[slug]
 ```
 
-Phase 1B is static: no auth, billing, admin, database, or APE.
+The page is server-rendered from PostgreSQL. `dynamic = "force-dynamic"` so production builds do not query the catalog. An empty catalog and a database failure each have their own copy.
 
 ## Locale
 
 `en` / `bn` via cookie `omniaskai_locale` (httpOnly, 1 year). The header **EN | বাং** control posts a Server Action; the first HTML response is locale-correct.
 
-```text
-src/lib/locale/          type, cookie read, setLocale, switch UI
-src/features/landing/
-  landing-language.ts    all landing display and aria copy
-```
-
-Components receive resolved `copy`. `Topic` is not bilingual. Card titles, subtitles, source counts, and Explore labels live in `landing-language.ts`. Preview Q/A stay the same in both locales (mixed English / Bangla / Banglish, as in the concept).
+Topic card titles, descriptions, source descriptions, badges, and previews come from the published topic projection with EN/BN fallback. Chrome copy (header, hero, empty/unavailable) stays in `landing-language.ts`.
 
 **SEO tradeoff:** one URL (`/`). Crawlers without the cookie mostly see English. URL prefixes / `hreflang` are later.
 
@@ -30,26 +24,16 @@ Components receive resolved `copy`. `Topic` is not bilingual. Card titles, subti
 
 Reference: `reference-concept-pages/omniaskai-landing-page.png` at **1024px**, then verify ~1280 / 1440 / tablet / ~375.
 
-| Section | Notes |
-| --- | --- |
-| Canvas | One near-white page with flowing blue/violet/teal/warm haze. No full-width colored slabs. |
-| Width | Hero, topic grid, and final CTA use `.landing-wide` (~1344px). |
-| Header | Sticky, airy. Compact menu below 1024. Pricing / About / auth are non-functional (not `href="#"`). Language switch is a segmented control with a sliding pill. |
-| Hero | Compact rectangular band (~600px at 1280). Copy stays readable; artwork stays dominant. Bangla headline is slightly smaller. Topics should peek on a normal desktop viewport. |
-| Topics | Strongest visual band. The whole card is the link (`cursor: pointer`). Explore is a glass direction cue, not a nested button. |
-| Features | Compact four-column transition, not a large isolated strip. |
-| How it works | Soft raised panel (shadow, no outline). Product-level promise; tax is one labelled example. Same idea for literature, history, films. |
-| Closing CTA | Portal invitation, blended into the same canvas. |
-| Footer | Tagline plus `© 2026 Junayed Rahimin ↗` (external link, new tab, pointer + hover). |
+Topic cards use persisted theme presets and bundled artwork. Missing artwork renders a gradient. Preview answers stay framed as examples.
 
-Assets: `public/brand/`, `public/landing/`, `public/topics/`.
+Auth / Pricing / About remain non-functional.
 
 ## Data
 
 ```text
-getPublishedTopics()
-   + getTopicPresentation(topic)   artwork, mood, featured
-   + landing copy.topics.cards[slug]
+getPublishedTopics(locale)
+   + getTopicPresentation(topic)
+   + landing chrome copy
 ```
 
 ## Files
@@ -61,20 +45,16 @@ src/features/landing/
   get-landing-copy.ts
   site-header.tsx
   landing-hero.tsx
-  landing-hero-visual.tsx
   landing-topic-grid.tsx
   topic-knowledge-card.tsx
-  landing-feature-row.tsx
-  landing-how-it-works.tsx
-  landing-final-cta.tsx
-  site-footer.tsx
-  landing-icons.tsx
+src/app/page.tsx
+src/app/loading.tsx
 ```
 
 ## Verification
 
-- `npm run lint`, `typecheck`, `build`
-- Browser at 1024 (primary), plus ~1280 / ~1440 / ~375
+- Published cards, empty catalog, and unavailable catalog
 - Locale switch + refresh keeps Bangla; `html lang` matches
 - Explore opens the topic conversation workspace; unknown slug → not-found
+- Optional artwork, preview, and knowledge-review date
 - Auth / Pricing / About do not navigate

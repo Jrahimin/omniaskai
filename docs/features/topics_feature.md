@@ -2,10 +2,10 @@
 
 OmniAskAI is organized around **Topics** — curated knowledge worlds, not a generic chatbot. Each topic has its own identity, trusted sources, and a conversation workspace at `/topics/[slug]`.
 
-Phase 1A ships the **static catalog contract** so landing, workspace, and a future database can share one shape.
+Public topics are loaded from **PostgreSQL**. A new topic can be imported and published without a source edit or rebuild.
 
 ```text
-Discover topic
+Discover published topic
    ↓
 Enter knowledge workspace
    ↓
@@ -14,73 +14,64 @@ Ask / inspect citations
 
 ## Contract
 
-A Topic is a **product** concept. An APE Project is a **knowledge/RAG** boundary. They stay separate. Project UUIDs live in server env mapping (`topic-ape-project-mapping.server.ts`), not on `Topic`.
+A Topic is a **product** concept. An APE Project is a **knowledge/RAG** boundary. They stay separate. The public `Topic` projection never includes drafts or APE identifiers.
 
 ```ts
-type Topic = {
-  id: string;
-  slug: string;
-  title: string;
-  subtitle: string;
-  status: "published" | "draft";
-  sortOrder: number;
-};
+getPublishedTopics(locale): Promise<Topic[]>
+getTopicBySlug(slug, locale): Promise<Topic | undefined>
 ```
 
-Deferred on the **Topic type** itself: source stats, APE mapping, suggested questions. Landing presentation (artwork path, featured flag) lives beside the catalog and does not make Topic bilingual.
+Both return **live revisions only**. Database failures surface as an unavailable state. Unknown or unpublished slugs are 404.
 
-## Presentation (landing)
+English is required to publish. Missing Bangla strings fall back to English. Preview objects and starter-question arrays fall back as complete units.
+
+## Publication
 
 ```text
-src/features/topics/topic-presentation.ts
+Create → save draft → validate APE project → publish
 ```
 
-Slug → artwork path, `objectPosition`, `featured`. Display strings (titles, source counts, previews) stay in `src/features/landing/landing-language.ts`.
+Editing published content clones a new draft. Saving never mutates the live revision. Publish switches the complete revision and mapping atomically after a fresh APE project read. Unpublish clears the live pointer. `conversation_epoch` increments on unpublish or live-project change; content-only publication preserves continuation.
 
-## Reads
+Ordering is a separate atomic operation with optimistic versions.
 
-```text
-UI / route
-   ↓
-getPublishedTopics() | getTopicBySlug(slug)
-   ↓
-sample-topics.ts   →   later: database
+## Catalog command
+
+```bash
+npm run db:migrate
+npm run db:seed
+npm run catalog -- import <file.json> [--publish]
+npm run catalog -- publish <slug>
+npm run catalog -- unpublish <slug>
 ```
 
-| Helper | Behavior |
-| --- | --- |
-| `getPublishedTopics()` | `status === "published"`, ordered by `sortOrder` |
-| `getTopicBySlug(slug)` | Exact slug match, or `undefined` |
-
-Same function names stay when persistence moves to a database. No service or repository layer.
-
-## Sample catalog
-
-Four published topics match the approved concepts:
-
-1. Income Tax (`income-tax`)
-2. Literature (`literature`)
-3. Bangladesh History (`bangladesh-history`)
-4. Movies & Culture (`movies-culture`)
-
-Draft topics are omitted from discovery.
+Seed is insert-if-missing. Existing records stay untouched, including publication state. Newly created complete topics may publish when their APE mapping validates; releasing a saved draft requires `catalog -- publish`. Legacy `APE_PROJECT_*` env vars are used only during seed/bootstrap.
 
 ## Files
 
 ```text
 src/features/topics/
   topic.ts
-  sample-topics.ts
+  topic-theme.ts
+  topic-presentation.ts
+  topic-validation-schema.ts
+  topic-locale-fallback.ts
   get-published-topics.ts
   get-topic-by-slug.ts
-  topic-presentation.ts
-  topic-ape-project-mapping.server.ts
+  server/                 # catalog reads, operations, seed, import
+drizzle/0001_phase2_product_foundation.sql
+drizzle/0002_phase2_admin_feedback.sql
+scripts/db-migrate.ts
+scripts/db-seed.ts
+scripts/catalog.ts
 ```
 
-`/topics/[slug]` is the **conversation workspace** (see `docs/features/conversations_feature.md`). Unknown slugs call `notFound()`. The Topic type is unchanged.
+Missing artwork renders a gradient. Uploaded artwork is stored under `MEDIA_STORAGE_DIR` and served at `/media/[assetId]`. Operators manage topics in `/admin`.
 
 ## Verification
 
-- Typecheck covers the contract and helpers
-- Four published topics; unknown slugs return `undefined` / not-found
-- Landing uses presentation + landing copy; Topic stays lean
+- Fresh migrate/seed; repeated seed neither duplicates, overwrites, nor republishes unpublished topics
+- Fifth topic JSON import appears in discovery after publish
+- Drafts stay private; publish/unpublish/order are atomic
+- Slug uniqueness, cross-topic revision rejection, concurrent draft saves
+- EN/BN fallback; optional artwork, preview, and knowledge-review date

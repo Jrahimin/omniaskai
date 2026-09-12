@@ -34,6 +34,8 @@ type ConversationAssistantAnswerProps = {
   selectedSourceId: string | null;
   isActiveEvidence: boolean;
   helpful: "up" | "down" | null;
+  helpfulPending?: boolean;
+  helpfulError?: boolean;
   copied: boolean;
   onCitation: (sourceId: string) => void;
   onOpenSources: () => void;
@@ -50,6 +52,8 @@ export function ConversationAssistantAnswer({
   selectedSourceId,
   isActiveEvidence,
   helpful,
+  helpfulPending = false,
+  helpfulError = false,
   copied,
   onCitation,
   onOpenSources,
@@ -107,7 +111,7 @@ export function ConversationAssistantAnswer({
 
   const cited = sourcesForIds(catalog, turn.sourceIds);
   const displayById = citationDisplayById(turn.sourceIds);
-  const showCue = cited.length > 0;
+  const showCue = turn.status === "grounded" && cited.length > 0;
   const sourceCount = groupSourcesByDocument(cited).length;
   const evidenceLabel = showCue
     ? formatEvidenceCounts(
@@ -257,34 +261,53 @@ export function ConversationAssistantAnswer({
       </div>
 
       <div className="workspace-answer-footer mt-5 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1">
-          <p className="text-muted mr-1 text-[0.72rem]">{copy.wasThisHelpful}</p>
-          <button
-            type="button"
-            onClick={() => onHelpful("up")}
-            aria-pressed={helpful === "up"}
-            aria-label={copy.helpful}
-            className={`inline-flex size-7 cursor-pointer items-center justify-center rounded-full ${
-              helpful === "up"
-                ? "bg-[var(--workspace-accent-soft)] text-[var(--workspace-accent-ink)]"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <ThumbUpIcon className="size-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onHelpful("down")}
-            aria-pressed={helpful === "down"}
-            aria-label={copy.notHelpful}
-            className={`inline-flex size-7 cursor-pointer items-center justify-center rounded-full ${
-              helpful === "down"
-                ? "bg-[#f8ece9] text-[#8a3a30]"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <ThumbDownIcon className="size-3.5" />
-          </button>
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex items-center gap-1">
+            <p className="text-muted mr-1 text-[0.72rem]">{copy.wasThisHelpful}</p>
+            <button
+              type="button"
+              onClick={() => onHelpful("up")}
+              disabled={helpfulPending || !turn.publicOperationId}
+              aria-pressed={helpful === "up"}
+              aria-busy={helpfulPending}
+              aria-label={copy.helpful}
+              className={`inline-flex size-7 items-center justify-center rounded-full ${
+                helpfulPending || !turn.publicOperationId
+                  ? "cursor-not-allowed opacity-50"
+                  : "cursor-pointer"
+              } ${
+                helpful === "up"
+                  ? "bg-[var(--workspace-accent-soft)] text-[var(--workspace-accent-ink)]"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <ThumbUpIcon className="size-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onHelpful("down")}
+              disabled={helpfulPending || !turn.publicOperationId}
+              aria-pressed={helpful === "down"}
+              aria-busy={helpfulPending}
+              aria-label={copy.notHelpful}
+              className={`inline-flex size-7 items-center justify-center rounded-full ${
+                helpfulPending || !turn.publicOperationId
+                  ? "cursor-not-allowed opacity-50"
+                  : "cursor-pointer"
+              } ${
+                helpful === "down"
+                  ? "bg-[#f8ece9] text-[#8a3a30]"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <ThumbDownIcon className="size-3.5" />
+            </button>
+          </div>
+          {helpfulError ? (
+            <p className="text-[0.72rem] text-[#8a3a30]">{copy.helpfulError}</p>
+          ) : !turn.publicOperationId ? (
+            <p className="text-muted text-[0.72rem]">{copy.helpfulUnavailable}</p>
+          ) : null}
         </div>
         <button
           type="button"

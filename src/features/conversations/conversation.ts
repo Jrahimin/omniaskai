@@ -66,6 +66,7 @@ export type AssistantTurn = {
   followUps: string[];
   sourceProvenance?: SourceProvenance;
   retryable?: boolean;
+  publicOperationId?: string;
 };
 
 export type ConversationTurn = UserTurn | AssistantTurn;
@@ -87,11 +88,11 @@ export type ConversationTurnFinal = {
   sourceIds: string[];
   sourceProvenance: SourceProvenance;
   followUps: [];
+  operationId?: string;
 };
 
 export type TopicWorkspace = {
   topicSlug: string;
-  exploreItemIds: string[];
   starterQuestions: string[];
 };
 

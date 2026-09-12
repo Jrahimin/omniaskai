@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createApeConversation } from "./ape-api-client.server";
+import {
+  classifyApeProjectForPublish,
+  createApeConversation,
+  getApeProject,
+  parseApeProjectRecord,
+} from "./ape-api-client.server";
 import type { ApeRuntimeConfig } from "./ape-config.server";
 
 const config: ApeRuntimeConfig = {
@@ -72,5 +77,87 @@ describe("createApeConversation", () => {
       }),
     );
     expect(JSON.stringify(errorSpy.mock.calls)).not.toContain("fetch failed");
+  });
+});
+
+describe("APE project records", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const projectJson = {
+    id: PROJECT_ID,
+    name: "Income Tax",
+    description: null,
+    is_active: true,
+    deleted_at: null,
+  };
+
+  it("parses an active project and classifies it as valid", () => {
+    const project = parseApeProjectRecord(projectJson);
+
+    expect(project).toEqual({
+      id: PROJECT_ID,
+      name: "Income Tax",
+      description: null,
+      isActive: true,
+      deletedAt: null,
+    });
+    expect(
+      classifyApeProjectForPublish({ status: "ok", project: project! }),
+    ).toBe("valid");
+  });
+
+  it("classifies inactive, deleted, missing, and inaccessible projects", () => {
+    const project = parseApeProjectRecord(projectJson)!;
+
+    expect(
+      classifyApeProjectForPublish({
+        status: "ok",
+        project: { ...project, isActive: false },
+      }),
+    ).toBe("inactive");
+    expect(
+      classifyApeProjectForPublish({
+        status: "ok",
+        project: { ...project, deletedAt: "2026-01-01T00:00:00Z" },
+      }),
+    ).toBe("deleted");
+    expect(classifyApeProjectForPublish({ status: "missing" })).toBe("missing");
+    expect(classifyApeProjectForPublish({ status: "inaccessible" })).toBe(
+      "inaccessible",
+    );
+    expect(classifyApeProjectForPublish({ status: "unreachable" })).toBe(
+      "inaccessible",
+    );
+  });
+
+  it("sends a default timeout signal on project reads", async () => {
+    const fetchMock = vi.fn(
+      async (_url: string, init?: { signal?: AbortSignal }) => {
+        expect(init?.signal).toBeInstanceOf(AbortSignal);
+        expect(init?.signal?.aborted).toBe(false);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              id: PROJECT_ID,
+              name: "Income Tax",
+              description: null,
+              is_active: true,
+              deleted_at: null,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      },
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getApeProject(config, PROJECT_ID);
+
+    expect(result.status).toBe("ok");
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 });

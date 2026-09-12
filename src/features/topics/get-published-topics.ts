@@ -1,9 +1,13 @@
-import { sampleTopics } from "./sample-topics";
-import type { Topic } from "./topic";
+import { cache } from "react";
+import "server-only";
 
-export function getPublishedTopics(): Topic[] {
-  return sampleTopics
-    .filter((topic) => topic.status === "published")
-    .slice()
-    .sort((left, right) => left.sortOrder - right.sortOrder);
-}
+import type { Locale } from "@/lib/locale/locale";
+
+import type { Topic } from "./topic";
+import { loadPublishedTopicsFromDatabase } from "./server/topic-catalog-read";
+
+export const getPublishedTopics = cache(
+  async (locale: Locale): Promise<Topic[]> => {
+    return loadPublishedTopicsFromDatabase(locale);
+  },
+);

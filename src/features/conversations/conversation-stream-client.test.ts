@@ -46,6 +46,19 @@ describe("readConversationTurnStream", () => {
     expect(callbacks.onError).toHaveBeenCalledWith(false);
   });
 
+  it("honors an explicit non-retryable error from the server", async () => {
+    const callbacks = handlers();
+
+    await readConversationTurnStream(
+      responseFrom([
+        encodeSseEvent("error", { retryable: false, code: "start_new" }),
+      ]),
+      callbacks,
+    );
+
+    expect(callbacks.onError).toHaveBeenCalledWith(false);
+  });
+
   it("treats an abruptly ended stream as ambiguous", async () => {
     const callbacks = handlers();
 

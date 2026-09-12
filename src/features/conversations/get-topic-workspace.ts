@@ -1,3 +1,10 @@
-import { getTopicWorkspace } from "./sample-workspaces";
+import type { Topic } from "@/features/topics/topic";
 
-export { getTopicWorkspace };
+import type { TopicWorkspace } from "./conversation";
+
+export function getTopicWorkspace(topic: Topic): TopicWorkspace {
+  return {
+    topicSlug: topic.slug,
+    starterQuestions: topic.starterQuestions,
+  };
+}

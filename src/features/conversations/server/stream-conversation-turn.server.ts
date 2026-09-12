@@ -12,9 +12,18 @@ import {
 } from "./ape-conversation-token";
 import { runConversationTurn } from "./run-conversation-turn";
 import {
-  getApeProjectIdForTopicSlug,
-  getTopicIdForSlug,
-} from "@/features/topics/topic-ape-project-mapping.server";
+  loadPublishedTopicExecution,
+} from "@/features/topics/server/topic-catalog-read";
+import { TopicCatalogUnavailableError } from "@/features/topics/server/topic-errors";
+import {
+  ConversationBlockedError,
+  ConversationBusyError,
+  ConversationPersistenceError,
+  completeTurnOperation,
+  failTurnOperation,
+  persistCreatedApeConversation,
+  reserveConversationTurn,
+} from "./conversation-turn-persistence";
 
 const MAX_QUESTION_LENGTH = 8000;
 const MAX_CONTINUATION_TOKEN_LENGTH = 1024;
@@ -145,20 +154,113 @@ export async function streamTopicConversationTurn(input: {
   signal: AbortSignal;
   enqueue: (chunk: string) => void;
 }): Promise<void> {
-  const config = getApeRuntimeConfig();
-  const topicId = getTopicIdForSlug(input.slug);
-  const projectId = getApeProjectIdForTopicSlug(input.slug);
+  const emit = (event: {
+    event: string;
+    data: unknown;
+  }) => {
+    input.enqueue(encodeSseEvent(event.event, event.data));
+  };
 
-  if (!config || !topicId || !projectId) {
-    input.enqueue(encodeSseEvent("error", {}));
+  const config = getApeRuntimeConfig();
+
+  if (!config) {
+    emit({
+      event: "error",
+      data: { retryable: true, code: "unavailable" },
+    });
+    return;
+  }
+
+  let topic;
+
+  try {
+    topic = await loadPublishedTopicExecution(input.slug);
+  } catch (error) {
+    if (error instanceof TopicCatalogUnavailableError) {
+      emit({
+        event: "error",
+        data: { retryable: true, code: "unavailable" },
+      });
+      return;
+    }
+
+    throw error;
+  }
+
+  if (!topic) {
+    emit({
+      event: "error",
+      data: { retryable: false, code: "start_new" },
+    });
+    return;
+  }
+
+  let conversationReferenceId: string | undefined;
+
+  if (input.continuationToken) {
+    const opened = openConversationToken(
+      config.tokenKey,
+      input.continuationToken,
+      topic.topicId,
+    );
+
+    if (!opened) {
+      emit({
+        event: "error",
+        data: { retryable: false, code: "start_new" },
+      });
+      return;
+    }
+
+    conversationReferenceId = opened.conversationReferenceId;
+  }
+
+  let reserved;
+
+  try {
+    reserved = await reserveConversationTurn({
+      topic,
+      conversationReferenceId,
+    });
+  } catch (error) {
+    if (error instanceof ConversationBusyError) {
+      emit({
+        event: "error",
+        data: { retryable: true, code: "retryable" },
+      });
+      return;
+    }
+
+    if (error instanceof ConversationBlockedError) {
+      emit({
+        event: "error",
+        data: { retryable: false, code: "start_new" },
+      });
+      return;
+    }
+
+    if (error instanceof ConversationPersistenceError) {
+      emit({
+        event: "error",
+        data: { retryable: true, code: "retryable" },
+      });
+      return;
+    }
+
+    emit({
+      event: "error",
+      data: { retryable: true, code: "retryable" },
+    });
     return;
   }
 
   await runConversationTurn({
-    topicId,
-    projectId,
+    topicId: topic.topicId,
+    projectId: reserved.apeProjectId,
+    conversationReferenceId: reserved.conversationReferenceId,
+    operationId: reserved.operationId,
+    apeConversationId: reserved.apeConversationId ?? undefined,
     question: input.question,
-    continuationToken: input.continuationToken,
     signal: input.signal,
     gateway: {
       createConversation: (id, signal) =>
@@ -169,11 +271,30 @@ export async function streamTopicConversationTurn(input: {
     tokens: {
       seal: (sealTopicId, conversationId) =>
         sealConversationToken(config.tokenKey, sealTopicId, conversationId),
-      open: (token, expectedTopicId) =>
-        openConversationToken(config.tokenKey, token, expectedTopicId),
+    },
+    lifecycle: {
+      persistCreatedConversation: (apeConversationId) =>
+        persistCreatedApeConversation({
+          conversationReferenceId: reserved.conversationReferenceId,
+          apeConversationId,
+        }),
+      persistCompleted: (result) =>
+        completeTurnOperation({
+          conversationReferenceId: reserved.conversationReferenceId,
+          operationId: reserved.operationId,
+          classification: result.classification,
+          apeAssistantMessageId: result.apeAssistantMessageId,
+        }),
+      persistFailed: (result) =>
+        failTurnOperation({
+          conversationReferenceId: reserved.conversationReferenceId,
+          operationId: reserved.operationId,
+          state: result.state,
+          blockConversation: result.blockConversation,
+        }),
     },
     emit: (event) => {
-      input.enqueue(encodeSseEvent(event.event, event.data));
+      emit(event);
     },
   });
 }

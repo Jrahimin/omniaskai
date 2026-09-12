@@ -13,9 +13,14 @@ import { SiteHeader } from "./site-header";
 type LandingPageProps = {
   locale: Locale;
   topics: Topic[];
+  unavailable?: boolean;
 };
 
-export function LandingPage({ locale, topics }: LandingPageProps) {
+export function LandingPage({
+  locale,
+  topics,
+  unavailable = false,
+}: LandingPageProps) {
   const copy = getLandingCopy(locale);
   const jsonLd = {
     "@context": "https://schema.org",
@@ -39,7 +44,20 @@ export function LandingPage({ locale, topics }: LandingPageProps) {
       <SiteHeader locale={locale} copy={copy} />
       <main id="main" tabIndex={-1} className="overflow-x-clip">
         <LandingHero copy={copy} />
-        <LandingTopicGrid copy={copy} topics={topics} />
+        {unavailable ? (
+          <section id="topics" className="relative scroll-mt-20 pt-6 pb-8">
+            <div className="landing-wide">
+              <h2 className="text-foreground text-center text-[1.55rem] font-bold tracking-tight">
+                {copy.topics.heading}
+              </h2>
+              <p className="text-muted mx-auto mt-8 max-w-lg text-center text-sm leading-relaxed">
+                {copy.topics.unavailable}
+              </p>
+            </div>
+          </section>
+        ) : (
+          <LandingTopicGrid copy={copy} topics={topics} />
+        )}
         <LandingFeatureRow copy={copy} />
         <LandingHowItWorks copy={copy} />
         <LandingFinalCta copy={copy} />

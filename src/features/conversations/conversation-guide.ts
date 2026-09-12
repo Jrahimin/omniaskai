@@ -7,12 +7,13 @@ const BENGALI_DIGITS = "০১২৩৪৫৬৭৮৯";
 export function resolveWorkspaceGuide(
   copy: ConversationCopy,
   exampleQuestions: string[],
+  aboutBody?: string,
 ): WorkspaceGuide {
   return {
     shortHint: copy.guide.shortHint,
     openLabel: copy.guide.openLabel,
     title: copy.guide.title,
-    intro: copy.guide.intro,
+    intro: aboutBody?.trim() || copy.guide.intro,
     exampleHeading: copy.guide.exampleHeading,
     steps: copy.guide.steps,
     exampleQuestions: exampleQuestions.slice(0, 3),
