@@ -8,14 +8,14 @@ import { logApeHttpFailure, logApeUpstreamFailure } from "./ape-upstream-log";
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export const APE_READ_TIMEOUT_MS = 8_000;
+export const APE_REQUEST_TIMEOUT_MS = 120_000;
 
-export function apeReadSignal(signal?: AbortSignal): AbortSignal {
+function apeRequestSignal(signal?: AbortSignal): AbortSignal {
   if (typeof AbortSignal.timeout !== "function") {
     return signal ?? new AbortController().signal;
   }
 
-  const timeout = AbortSignal.timeout(APE_READ_TIMEOUT_MS);
+  const timeout = AbortSignal.timeout(APE_REQUEST_TIMEOUT_MS);
 
   if (!signal) {
     return timeout;
@@ -47,7 +47,7 @@ export async function createApeConversation(
         },
         body: JSON.stringify({ title: null }),
         cache: "no-store",
-        signal,
+        signal: apeRequestSignal(signal),
       },
     );
   } catch {
@@ -116,7 +116,7 @@ export async function getApeProject(
         Accept: "application/json",
       },
       cache: "no-store",
-      signal: apeReadSignal(signal),
+      signal: apeRequestSignal(signal),
     });
   } catch {
     logApeUpstreamFailure("get_project");
@@ -173,7 +173,7 @@ export async function listApeProjects(
           Accept: "application/json",
         },
         cache: "no-store",
-        signal: apeReadSignal(signal),
+        signal: apeRequestSignal(signal),
       },
     );
   } catch {
@@ -317,7 +317,7 @@ export async function streamApeMessage(
       },
       body: JSON.stringify({ content }),
       cache: "no-store",
-      signal: apeReadSignal(signal),
+      signal: apeRequestSignal(signal),
     },
   );
 }
@@ -363,7 +363,7 @@ export async function getApeConversationMessages(
           Accept: "application/json",
         },
         cache: "no-store",
-        signal: apeReadSignal(signal),
+        signal: apeRequestSignal(signal),
       },
     );
   } catch {

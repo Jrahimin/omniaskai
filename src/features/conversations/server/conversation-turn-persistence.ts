@@ -9,8 +9,9 @@ import {
 } from "@/lib/db/schema";
 import { newId } from "@/features/topics/server/topic-catalog-read";
 import type { PublishedTopicExecution } from "@/features/topics/server/topic-catalog-read";
+import { APE_REQUEST_TIMEOUT_MS } from "./ape-api-client.server";
 
-export const STREAM_DEADLINE_MS = 110_000;
+export const STREAM_DEADLINE_MS = APE_REQUEST_TIMEOUT_MS;
 
 export class ConversationBusyError extends Error {
   constructor() {

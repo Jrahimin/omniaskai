@@ -33,7 +33,7 @@ Content-only publication preserves continuation. Remap or unpublish increments `
 
 If PostgreSQL fails before APE, the turn is retryable and APE is not called. If final persistence fails, the answer is still delivered without `operationId`, continuation is blocked, and the failure is logged.
 
-Expired running operations (beyond the 110s stream deadline) become `unknown` and block continuation. Concurrent running operations are rejected.
+Expired running operations (beyond the 120s APE deadline) become `unknown` and block continuation. Concurrent running operations are rejected.
 
 ## Classification
 
@@ -71,6 +71,6 @@ src/app/api/topics/[slug]/conversation-turns/route.ts
 - Continuation rejects failed/unknown last operations even if the conversation is still open
 - Reservation re-reads publication, mapping, and epoch under lock; a stale snapshot after unpublish/remap cannot start APE work
 - Persist-created fails closed when the reference is already blocked
-- Admin APE project/history reads use an 8-second deadline and surface unavailable on timeout
+- Admin APE reads and answer streams share a 120-second deadline. Admin reads surface unavailable on timeout
 - Content-only publish preserves continuation; remap/unpublish invalidates it
 - Network payloads contain no APE key, project id, or raw APE conversation id

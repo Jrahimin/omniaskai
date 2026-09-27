@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  APE_REQUEST_TIMEOUT_MS,
   classifyApeProjectForPublish,
   createApeConversation,
   getApeProject,
   parseApeProjectRecord,
+  streamApeMessage,
 } from "./ape-api-client.server";
 import type { ApeRuntimeConfig } from "./ape-config.server";
 
@@ -133,7 +135,7 @@ describe("APE project records", () => {
     );
   });
 
-  it("sends a default timeout signal on project reads", async () => {
+  it("sends the shared request deadline on project reads", async () => {
     const fetchMock = vi.fn(
       async (_url: string, init?: { signal?: AbortSignal }) => {
         expect(init?.signal).toBeInstanceOf(AbortSignal);
@@ -159,5 +161,68 @@ describe("APE project records", () => {
 
     expect(result.status).toBe("ok");
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+});
+
+describe("streamApeMessage", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("uses the same 120s deadline as admin reads and conversation creates", async () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    const controller = new AbortController();
+    const conversationId = "880e8400-e29b-41d4-a716-446655440003";
+    let streamSignal: AbortSignal | undefined;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: { signal?: AbortSignal }) => {
+        if (url.endsWith("/messages/stream")) {
+          streamSignal = init?.signal;
+          return new Response("", { status: 200 });
+        }
+
+        if (url.endsWith("/conversations")) {
+          return new Response(
+            JSON.stringify({ success: true, data: { id: conversationId } }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              id: PROJECT_ID,
+              name: "Income Tax",
+              description: null,
+              is_active: true,
+              deleted_at: null,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }),
+    );
+
+    await getApeProject(config, PROJECT_ID);
+    await createApeConversation(config, PROJECT_ID, controller.signal);
+    await streamApeMessage(
+      config,
+      PROJECT_ID,
+      conversationId,
+      "What income sources are taxable?",
+      controller.signal,
+    );
+
+    expect(APE_REQUEST_TIMEOUT_MS).toBe(120_000);
+    expect(timeout.mock.calls.map(([ms]) => ms)).toEqual([
+      120_000,
+      120_000,
+      120_000,
+    ]);
+    controller.abort();
+    expect(streamSignal?.aborted).toBe(true);
   });
 });
