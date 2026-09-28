@@ -1,0 +1,18 @@
+[Unit]
+Description=OmniAskAI Next.js application
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=junayed
+Group=junayed
+WorkingDirectory=/opt/omniaskai
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /opt/omniaskai/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3011
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
