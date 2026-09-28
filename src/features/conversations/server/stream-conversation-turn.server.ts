@@ -15,6 +15,7 @@ import {
   loadPublishedTopicExecution,
 } from "@/features/topics/server/topic-catalog-read";
 import { TopicCatalogUnavailableError } from "@/features/topics/server/topic-errors";
+import { getAppOrigin } from "@/lib/auth/auth-env";
 import {
   ConversationBlockedError,
   ConversationBusyError,
@@ -144,7 +145,7 @@ export function isSameOriginRequest(request: Request): boolean {
     return true;
   }
 
-  return origin === new URL(request.url).origin;
+  return origin === new URL(getAppOrigin()).origin;
 }
 
 export async function streamTopicConversationTurn(input: {

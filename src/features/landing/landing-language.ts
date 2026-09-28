@@ -131,7 +131,7 @@ export const landingLanguage = {
     meta: {
       title: "OmniAskAI — Local questions. Clear answers.",
       description:
-        "Explore Bangladesh income tax, history, literature and culture through focused conversations grounded in selected sources.",
+        "Explore Bangladesh income tax and business through focused conversations grounded in selected sources.",
     },
 
     languageSwitch: {
@@ -152,7 +152,7 @@ export const landingLanguage = {
       badge: "Selected sources. Plain language.",
       headline: "Local questions. Clear answers.",
       headlineEmphasis: "Sources you can open.",
-      body: "Explore Bangladesh income tax, history, literature and culture through focused conversations grounded in selected sources. Ask in Bangla, English or Banglish—and follow the evidence behind the answer.",
+      body: "Explore Bangladesh income tax and business through focused conversations grounded in selected sources. Ask in Bangla, English or Banglish—and follow the evidence behind the answer.",
       exploreTopics: "Explore topics",
       seeExample: "See how answers work",
       guide: {
@@ -241,7 +241,7 @@ export const landingLanguage = {
       steps: [
         {
           title: "Choose a topic",
-          body: "Income tax, literature, history or culture — each one has its own selected sources.",
+          body: "Income Tax and BD Business each have selected sources for their subject.",
         },
         {
           title: "Ask your question",
@@ -261,7 +261,7 @@ export const landingLanguage = {
       points: [
         {
           title: "Selected, not exhaustive",
-          body: "Income Tax uses ordinances, NBR guidance and related notes. Literature, history and culture use their own selected material. If the evidence is missing, the answer should say so.",
+          body: "Income Tax and BD Business use the selected laws, official guidance, and related materials available in their shared knowledge project. If the evidence is missing, the answer should say so.",
         },
         {
           title: "Review date is not the law’s year",
@@ -298,7 +298,7 @@ export const landingLanguage = {
     meta: {
       title: "OmniAskAI — আপনার প্রশ্নের সহজ উত্তর",
       description:
-        "নির্বাচিত উৎস থেকে বাংলাদেশের আয়কর, ইতিহাস, সাহিত্য ও সংস্কৃতি নিয়ে কথা বলুন। উত্তরের পাশে যাচাই করার উৎস খুলুন।",
+        "নির্বাচিত উৎস থেকে বাংলাদেশের আয়কর ও ব্যবসা নিয়ে কথা বলুন। উত্তরের পাশে যাচাই করার উৎস খুলুন।",
     },
 
     languageSwitch: {
@@ -319,7 +319,7 @@ export const landingLanguage = {
       badge: "নির্বাচিত উৎস। সহজ ভাষা।",
       headline: "আপনার প্রশ্নের সহজ উত্তর।",
       headlineEmphasis: "সঙ্গে যাচাই করার উৎস।",
-      body: "বাংলাদেশের আয়কর, ইতিহাস, সাহিত্য ও সংস্কৃতি নিয়ে আলাদা আলাদা আলোচনা — নির্বাচিত উৎসের ভিত্তিতে। বাংলা, ইংরেজি বা বাংলিশে জিজ্ঞেস করুন, তারপর উত্তরের পেছনের অংশটি খুলে দেখুন।",
+      body: "বাংলাদেশের আয়কর ও ব্যবসা নিয়ে আলাদা আলাদা আলোচনা — নির্বাচিত উৎসের ভিত্তিতে। বাংলা, ইংরেজি বা বাংলিশে জিজ্ঞেস করুন, তারপর উত্তরের পেছনের অংশটি খুলে দেখুন।",
       exploreTopics: "বিষয় দেখুন",
       seeExample: "উত্তর কীভাবে কাজ করে",
       guide: {
@@ -406,7 +406,7 @@ export const landingLanguage = {
       steps: [
         {
           title: "একটা বিষয় বেছে নিন",
-          body: "আয়কর, সাহিত্য, ইতিহাস বা সংস্কৃতি — প্রতিটির নিজস্ব নির্বাচিত উৎস।",
+          body: "আয়কর ও বাংলাদেশে ব্যবসা — প্রতিটি বিষয়ে নির্বাচিত উৎস দেখুন।",
         },
         {
           title: "প্রশ্ন করুন",
@@ -426,7 +426,7 @@ export const landingLanguage = {
       points: [
         {
           title: "বাছাই করা, সম্পূর্ণ নয়",
-          body: "আয়করে অধ্যাদেশ, এনবিআর নির্দেশনা ও সংশ্লিষ্ট নোট। সাহিত্য, ইতিহাস ও সংস্কৃতির নিজস্ব উপাদান। প্রমাণ না থাকলে উত্তরে সেটা বলা উচিত।",
+          body: "আয়কর ও ব্যবসার বিষয়ে একই জ্ঞানভান্ডারে থাকা নির্বাচিত আইন, সরকারি নির্দেশনা ও সংশ্লিষ্ট উপকরণ ব্যবহার করা হয়। প্রমাণ না থাকলে উত্তরে সেটা বলা উচিত।",
         },
         {
           title: "পর্যালোচনার তারিখ আইনের বছর নয়",

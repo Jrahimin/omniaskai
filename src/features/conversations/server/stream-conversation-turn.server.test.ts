@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   isSameOriginRequest,
@@ -64,19 +64,25 @@ describe("conversation turn route boundary", () => {
     ).toBeUndefined();
   });
 
-  it("allows same-origin and missing Origin, and rejects a foreign Origin", () => {
-    const url = "http://localhost:3011/api/topics/income-tax/conversation-turns";
+  it("uses the public app origin behind a reverse proxy", () => {
+    vi.stubEnv("APP_ORIGIN", "https://omniaskai.com");
 
-    expect(
-      isSameOriginRequest(
-        new Request(url, { headers: { origin: "http://localhost:3011" } }),
-      ),
-    ).toBe(true);
-    expect(isSameOriginRequest(new Request(url))).toBe(true);
-    expect(
-      isSameOriginRequest(
-        new Request(url, { headers: { origin: "https://evil.example" } }),
-      ),
-    ).toBe(false);
+    try {
+      const url = "http://127.0.0.1:3011/api/topics/income-tax/conversation-turns";
+
+      expect(
+        isSameOriginRequest(
+          new Request(url, { headers: { origin: "https://omniaskai.com" } }),
+        ),
+      ).toBe(true);
+      expect(isSameOriginRequest(new Request(url))).toBe(true);
+      expect(
+        isSameOriginRequest(
+          new Request(url, { headers: { origin: "https://evil.example" } }),
+        ),
+      ).toBe(false);
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });
