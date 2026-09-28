@@ -173,4 +173,12 @@ describe("workspaceSessionReducer", () => {
     expect(assistant.status).toBe("completed");
     expect(assistant.sourceIds).toEqual([]);
   });
+
+  it("removes an in-flight exchange when the user stops", () => {
+    const stopped = workspaceSessionReducer(submitState(), { type: "stop" });
+
+    expect(stopped.operationId).toBeNull();
+    expect(stopped.activeConversationId).toBeNull();
+    expect(stopped.conversations).toEqual([]);
+  });
 });

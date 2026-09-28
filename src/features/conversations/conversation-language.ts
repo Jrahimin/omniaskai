@@ -36,9 +36,7 @@ export type ConversationCopy = {
   searchLabel: string;
   today: string;
   previous7Days: string;
-  goDeeper: string;
-  goDeeperBody: string;
-  upgradeToPro: string;
+  sessionNote: string;
   themeLight: string;
   collapseSidebar: string;
   expandSidebar: string;
@@ -52,6 +50,8 @@ export type ConversationCopy = {
   sources: string;
   inThisAnswer: string;
   conversationSources: string;
+  sourceCountOne: string;
+  referenceCountOne: string;
   referencesCount: string;
   evidenceCounts: string;
   referencedIn: string;
@@ -71,7 +71,18 @@ export type ConversationCopy = {
   exploreNext: string;
   emptyTitle: string;
   emptyBody: string;
+  taxOpeningTitle: string;
+  taxOpeningBody: string;
+  starterHint: string;
+  composerTitle: string;
+  composerFollowUpTitle: string;
+  composerBusyTitle: string;
+  coverageTitle: string;
+  coverageNote: string;
+  yearCoverageUnverified: string;
   pendingLabel: string;
+  pendingSlow: string;
+  stop: string;
   errorTitle: string;
   errorBody: string;
   retryableErrorBody: string;
@@ -79,6 +90,12 @@ export type ConversationCopy = {
   openSources: string;
   composerLanguage: string;
   composerLanguageHint: string;
+  answerLanguage: string;
+  composerHint: string;
+  citationLabel: string;
+  excerptUnclear: string;
+  sourceFallbackTitle: string;
+  conversationSourcesAction: string;
   languageAuto: string;
   languageEn: string;
   languageBn: string;
@@ -109,22 +126,22 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     searchLabel: "Search conversations",
     today: "Today",
     previous7Days: "Previous 7 days",
-    goDeeper: "Go deeper with Pro",
-    goDeeperBody: "More collections, saved answers, and room to keep going.",
-    upgradeToPro: "Upgrade to Pro",
+    sessionNote: "Temporary conversation. Reloading this tab starts fresh.",
     themeLight: "Light",
     collapseSidebar: "Collapse sidebar",
     expandSidebar: "Expand sidebar",
     openHistory: "Open conversations",
     closeHistory: "Close conversations",
     topicsCrumb: "Topics",
-    aboutThisTopic: "About this topic",
+    aboutThisTopic: "Explore this space",
     aboutHeading: "About this knowledge space",
     closeAbout: "Close",
     basedOnEvidence: "Based on {sources} · {references}",
     sources: "Sources",
     inThisAnswer: "In this answer",
-    conversationSources: "All sources",
+    conversationSources: "Conversation sources",
+    sourceCountOne: "{n} source",
+    referenceCountOne: "{n} reference",
     referencesCount: "{n} references",
     evidenceCounts: "{sources} · {references}",
     referencedIn: "Referenced in",
@@ -144,10 +161,23 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     copyAnswer: "Copy",
     copied: "Copied",
     exploreNext: "Explore next",
-    emptyTitle: "Ask this knowledge space",
+    emptyTitle: "Ask about this topic",
     emptyBody:
-      "Start with a question below, or write your own. Answers stay readable — and sources stay close.",
-    pendingLabel: "Reviewing relevant sources…",
+      "Start with a question below. The answer stays next to the sources you can open.",
+    taxOpeningTitle: "Understand the rule. See the source.",
+    taxOpeningBody:
+      "Ask about Bangladesh income tax in your own words. Get a clear explanation, then open the passage behind a cited claim.",
+    starterHint: "Choose a starting point. Make it your own.",
+    composerTitle: "Your question starts here",
+    composerFollowUpTitle: "Keep the conversation going",
+    composerBusyTitle: "Preparing your answer",
+    coverageTitle: "What this topic covers",
+    coverageNote:
+      "The review date is when this material was checked for OmniAskAI. It is not the year a rule applies. If the sources do not cover a year or a document, the answer should say so.",
+    yearCoverageUnverified: "Check the tax year in each source before using a rule.",
+    pendingLabel: "Finding relevant passages and preparing your answer…",
+    pendingSlow: "Still working through the sources. Thanks for waiting—your answer is on its way.",
+    stop: "Stop",
     errorTitle: "This answer could not be shown",
     errorBody:
       "Something went wrong while preparing this reply. Start a new conversation, then ask again.",
@@ -157,7 +187,14 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     openSources: "Open sources",
     composerLanguage: "Reply language",
     composerLanguageHint:
-      "Answers follow the question language. Explicit English, Bangla, or Banglish control comes later.",
+      "Answers follow the wording of the question. Interface language does not choose the answer language.",
+    answerLanguage: "Answers follow your question",
+    composerHint: "Enter to send · Shift+Enter for a new line",
+    citationLabel: "Source {n}: {title}",
+    excerptUnclear:
+      "This passage could not be displayed clearly. Open the original document.",
+    sourceFallbackTitle: "Source document",
+    conversationSourcesAction: "Sources for this conversation",
     languageAuto: "Auto",
     languageEn: "EN",
     languageBn: "বাং",
@@ -167,18 +204,19 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     send: "Send",
     disclaimer:
       "OmniAskAI can make mistakes. Please verify important information.",
-    unavailable: "Coming later",
+    unavailable: "Original document link unavailable",
     you: "You",
     close: "Close",
     startersLabel: "Try asking",
     noMatchingConversations: "No conversations match that search.",
     noSourcesInAnswer: "This answer does not cite a source yet.",
-    noSourcesInConversation: "No sources in this conversation yet.",
+    noSourcesInConversation:
+      "Your sources will appear here after your first answer.",
     sourcesCount: "{n} sources",
     catalogUnavailableTitle: "This knowledge space is unavailable",
     catalogUnavailableBody:
       "The topic catalog could not be loaded. Please try again shortly.",
-    reviewedOn: "Reviewed {date}",
+    reviewedOn: "Editorial review {date}",
     guide: {
       shortHint:
         "Ask naturally → read the answer → check the sources → keep exploring",
@@ -214,22 +252,22 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     searchLabel: "আলোচনা খুঁজুন",
     today: "আজ",
     previous7Days: "গত ৭ দিন",
-    goDeeper: "Pro-তে আরও গভীরে যান",
-    goDeeperBody: "আরও সংকলন, সংরক্ষিত উত্তর, এবং এগোতে থাকার জায়গা।",
-    upgradeToPro: "Pro-তে উন্নীত করুন",
+    sessionNote: "অস্থায়ী আলোচনা। এই ট্যাব রিলোড করলে নতুন করে শুরু হয়।",
     themeLight: "হালকা",
     collapseSidebar: "সাইডবার গুটিয়ে নিন",
     expandSidebar: "সাইডবার খুলুন",
     openHistory: "আলোচনা খুলুন",
     closeHistory: "আলোচনা বন্ধ করুন",
     topicsCrumb: "বিষয়",
-    aboutThisTopic: "এই বিষয় সম্পর্কে",
+    aboutThisTopic: "জ্ঞান-পরিসর দেখুন",
     aboutHeading: "এই জ্ঞান-পরিসর সম্পর্কে",
     closeAbout: "বন্ধ করুন",
     basedOnEvidence: "{sources} · {references} ভিত্তিতে",
     sources: "উৎস",
     inThisAnswer: "এই উত্তরের উৎস",
-    conversationSources: "সব উৎস",
+    conversationSources: "আলোচনার উৎস",
+    sourceCountOne: "{n}টি উৎস",
+    referenceCountOne: "{n}টি রেফারেন্স",
     referencesCount: "{n}টি রেফারেন্স",
     evidenceCounts: "{sources} · {references}",
     referencedIn: "রেফারেন্স",
@@ -248,10 +286,23 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     copyAnswer: "কপি",
     copied: "কপি হয়েছে",
     exploreNext: "এরপর জানুন",
-    emptyTitle: "এই জ্ঞান-পরিসরে জিজ্ঞাসা করুন",
+    emptyTitle: "এই বিষয়ে জিজ্ঞাসা করুন",
     emptyBody:
-      "নিচের একটি প্রশ্ন দিয়ে শুরু করুন, অথবা নিজেরটা লিখুন। উত্তর পাঠযোগ্য থাকবে — উৎসও কাছে থাকবে।",
-    pendingLabel: "প্রাসঙ্গিক উৎস দেখা হচ্ছে…",
+      "নিচের একটি প্রশ্ন দিয়ে শুরু করুন। উত্তরের পাশে খোলা যায় এমন উৎস থাকবে।",
+    taxOpeningTitle: "নিয়ম বুঝুন। উৎস নিজেই দেখুন।",
+    taxOpeningBody:
+      "বাংলাদেশের আয়কর নিয়ে নিজের ভাষায় জিজ্ঞাসা করুন। সহজ উত্তর পড়ুন, তারপর উদ্ধৃত দাবির পেছনের অংশ খুলে দেখুন।",
+    starterHint: "একটি প্রশ্ন বেছে নিন, নিজের মতো বদলান।",
+    composerTitle: "আপনার প্রশ্ন এখানেই শুরু",
+    composerFollowUpTitle: "পরের প্রশ্নটি করুন",
+    composerBusyTitle: "আপনার উত্তর তৈরি হচ্ছে",
+    coverageTitle: "এই বিষয় কী কভার করে",
+    coverageNote:
+      "পর্যালোচনার তারিখ মানে উপাদান কবে দেখা হয়েছে। সেটা নিয়ম যে বছরে প্রযোজ্য, সেটা নয়। উৎসে কোনো বছর বা দলিল না থাকলে উত্তরে সেটা বলা উচিত।",
+    yearCoverageUnverified: "নিয়ম প্রয়োগের আগে উৎসে করবর্ষ মিলিয়ে নিন।",
+    pendingLabel: "প্রাসঙ্গিক উৎস খুঁজে আপনার উত্তর তৈরি করা হচ্ছে…",
+    pendingSlow: "উৎসগুলো আরও ভালোভাবে দেখা হচ্ছে। অপেক্ষার জন্য ধন্যবাদ—উত্তর আসছে।",
+    stop: "থামান",
     errorTitle: "এই উত্তর দেখানো যায়নি",
     errorBody:
       "উত্তর তৈরি করতে গিয়ে সমস্যা হয়েছে। নতুন আলোচনা শুরু করে আবার জিজ্ঞাসা করুন।",
@@ -261,7 +312,13 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     openSources: "উৎস খুলুন",
     composerLanguage: "উত্তরের ভাষা",
     composerLanguageHint:
-      "উত্তর প্রশ্নের ভাষা অনুসরণ করে। ইংরেজি, বাংলা বা বাংলিশ বেছে নেওয়া পরে আসবে।",
+      "উত্তর প্রশ্নের ভাষা অনুসরণ করে। পাতার ভাষা উত্তরের ভাষা ঠিক করে না।",
+    answerLanguage: "উত্তর আপনার প্রশ্ন অনুসরণ করে",
+    composerHint: "পাঠাতে Enter · নতুন লাইনে Shift+Enter",
+    citationLabel: "উৎস {n}: {title}",
+    excerptUnclear: "এই অংশটি স্পষ্ট দেখানো যায়নি। মূল দলিল খুলুন।",
+    sourceFallbackTitle: "উৎসের দলিল",
+    conversationSourcesAction: "এই আলোচনার উৎস",
     languageAuto: "স্বয়ং",
     languageEn: "EN",
     languageBn: "বাং",
@@ -271,18 +328,18 @@ export const conversationLanguage: Record<Locale, ConversationCopy> = {
     send: "পাঠান",
     disclaimer:
       "OmniAskAI ভুল করতে পারে। গুরুত্বপূর্ণ তথ্য নিজে যাচাই করুন।",
-    unavailable: "শীঘ্রই আসছে",
+    unavailable: "মূল দলিলের লিংক নেই",
     you: "আপনি",
     close: "বন্ধ",
     startersLabel: "জিজ্ঞাসা করে দেখুন",
     noMatchingConversations: "এই খোঁজার সাথে কোনো আলোচনা মেলেনি।",
     noSourcesInAnswer: "এই উত্তরে এখনও কোনো উৎস নেই।",
-    noSourcesInConversation: "এই আলোচনায় এখনও কোনো উৎস নেই।",
+    noSourcesInConversation: "প্রথম উত্তরের পর উৎস এখানে দেখা যাবে।",
     sourcesCount: "{n}টি উৎস",
     catalogUnavailableTitle: "এই জ্ঞান-পরিসর এখন খোলা যাচ্ছে না",
     catalogUnavailableBody:
       "বিষয়ের তথ্য এখন লোড করা যায়নি। একটু পরে আবার চেষ্টা করুন।",
-    reviewedOn: "হালনাগাদ {date}",
+    reviewedOn: "সম্পাদকীয় পর্যালোচনা {date}",
     guide: {
       shortHint:
         "স্বাভাবিকভাবে জিজ্ঞাসা করুন → উত্তর পড়ুন → উৎস দেখুন → ঘুরে দেখতে থাকুন",

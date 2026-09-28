@@ -21,6 +21,7 @@ import {
   groupSourcesByDocument,
   type SourceDocumentGroup,
 } from "./group-conversation-sources";
+import { presentConversationSource } from "./present-conversation-source";
 
 type SourceTab = "answer" | "conversation";
 
@@ -57,7 +58,13 @@ export function ConversationSourcePanel({
   const groups = groupSourcesByDocument(sources);
   const displayById = citationDisplayById(sources.map((source) => source.id));
   const empty =
-    tab === "answer" ? copy.noSourcesInAnswer : copy.noSourcesInConversation;
+    sources.length === 0 &&
+    answerSources.length === 0 &&
+    conversationSources.length === 0
+      ? copy.noSourcesInConversation
+      : tab === "answer"
+        ? copy.noSourcesInAnswer
+        : copy.noSourcesInConversation;
   const [opened, setOpened] = useState<Record<string, boolean>>({});
 
   return (
@@ -97,9 +104,16 @@ export function ConversationSourcePanel({
 
       <div className="workspace-pane-scroll min-h-0 flex-1 overflow-y-auto px-3 py-3">
         {groups.length === 0 ? (
-          <p className="text-muted px-1 py-3 text-[0.8rem] leading-relaxed">
-            {empty}
-          </p>
+          answerSources.length === 0 && conversationSources.length === 0 ? (
+            <div className="workspace-source-empty">
+              <div className="workspace-source-empty-visual" aria-hidden="true"><span /><span /><span /></div>
+              <p className="workspace-source-empty-title">{locale === "bn" ? "উত্তরের পেছনের দলিল" : "The documents behind the answer"}</p>
+              <p className="text-muted mt-1.5 text-[0.8rem] leading-relaxed">{locale === "bn" ? "প্রশ্নের পরে এখানে উদ্ধৃত অংশ দেখা যাবে। কোন দাবিটি কোথা থেকে এসেছে, খুলে মিলিয়ে নিন।" : "After you ask, cited passages appear here. Open one to trace a claim back to its document."}</p>
+              <p className="workspace-source-empty-foot">{locale === "bn" ? "প্রথমে একটি প্রশ্ন করুন ↗" : "Start with a question ↗"}</p>
+            </div>
+          ) : (
+            <p className="text-muted px-1 py-3 text-[0.8rem] leading-relaxed">{empty}</p>
+          )
         ) : (
           <ul className="flex flex-col">
             {groups.map((group, groupIndex) => {
@@ -235,13 +249,18 @@ function SourceGroupCard({
             className="flex w-full cursor-pointer items-start justify-between gap-2 text-left"
           >
             <span className="min-w-0">
-              <span className="block text-[0.78rem] leading-snug font-semibold break-words">
-                {group.title}
+              <span className="block text-[0.9rem] leading-snug font-semibold break-words">
+                {presentConversationSource({
+                  title: group.title,
+                  fallbackTitle: copy.sourceFallbackTitle,
+                }).title}
               </span>
-              <span className="text-muted mt-0.5 block text-[0.66rem]">
+              <span className="text-muted mt-0.5 block text-[0.78rem]">
                 {formatSourcesCount(
                   group.references.length,
-                  copy.referencesCount,
+                  group.references.length === 1
+                    ? copy.referenceCountOne
+                    : copy.referencesCount,
                   locale,
                 )}
               </span>
@@ -288,16 +307,27 @@ function SourceExcerpt({
   copy: ConversationCopy;
   source: ConversationSource;
 }) {
+  const presented = presentConversationSource({
+    title: source.title,
+    excerpt: source.excerpt,
+    href: source.href,
+    fallbackTitle: copy.sourceFallbackTitle,
+  });
   const meta = [source.publisher, source.year, source.locator]
     .filter(Boolean)
     .join(" · ");
 
   return (
     <div className="mt-2 border-t border-[color-mix(in_srgb,var(--border)_70%,transparent)] pt-2 pl-9">
-      {meta ? <p className="text-muted text-[0.66rem]">{meta}</p> : null}
-      {source.excerpt ? (
-        <p className="text-muted mt-1 text-[0.74rem] leading-relaxed">
-          {source.excerpt}
+      {meta ? <p className="text-muted text-[0.78rem]">{meta}</p> : null}
+      {presented.excerpt ? (
+        <p className="text-foreground mt-1 text-[0.9rem] leading-relaxed">
+          {presented.excerpt}
+        </p>
+      ) : null}
+      {presented.excerptUnclear || presented.titleUnclear ? (
+        <p className="text-muted mt-1 text-[0.84rem] leading-relaxed">
+          {copy.excerptUnclear}
         </p>
       ) : null}
       {source.href ? (
@@ -311,16 +341,7 @@ function SourceExcerpt({
           <ExternalIcon className="size-3" />
         </a>
       ) : (
-        <button
-          type="button"
-          disabled
-          title={copy.unavailable}
-          aria-label={`${copy.viewSource}. ${copy.unavailable}`}
-          className="text-muted mt-1.5 inline-flex cursor-not-allowed items-center gap-1 text-[0.72rem] font-medium opacity-70"
-        >
-          {copy.viewSource}
-          <ExternalIcon className="size-3" />
-        </button>
+        <p className="text-muted mt-1.5 text-[0.72rem]">{copy.unavailable}</p>
       )}
     </div>
   );

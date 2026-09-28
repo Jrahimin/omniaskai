@@ -61,7 +61,7 @@ export function AdminTopicPreview({
         <div className="mt-4 max-w-[42rem]">
           <TopicKnowledgeCard
             slug={topic.slug}
-            copy={topicCardCopy(topic, landing)}
+            copy={topicCardCopy(topic, landing, locale)}
             presentation={presentation}
             interactive={false}
           />

@@ -8,10 +8,9 @@ import type { Locale } from "@/lib/locale/locale";
 import type {
   ConversationCopy,
   TopicIdentityCopy,
-  WorkspaceGuide,
 } from "./conversation-language";
+import type { TopicOpening } from "./topic-opening";
 import {
-  CalendarIcon,
   InfoCircleIcon,
   MenuIcon,
   PlusIcon,
@@ -23,7 +22,8 @@ type ConversationTopicHeaderProps = {
   copy: ConversationCopy;
   identity: TopicIdentityCopy;
   presentation: TopicPresentation;
-  guide: WorkspaceGuide;
+  opening: TopicOpening;
+  showIntro: boolean;
   onOpenHistory: () => void;
   onNewConversation: () => void;
   onOpenGuide: () => void;
@@ -36,7 +36,8 @@ export function ConversationTopicHeader({
   copy,
   identity,
   presentation,
-  guide,
+  opening,
+  showIntro,
   onOpenHistory,
   onNewConversation,
   onOpenGuide,
@@ -44,7 +45,7 @@ export function ConversationTopicHeader({
   sourcesCountLabel,
 }: ConversationTopicHeaderProps) {
   return (
-    <header className="workspace-header workspace-topic-band">
+    <header className="workspace-header workspace-topic-band" data-intro={showIntro ? "true" : "false"}>
       <div className="workspace-topic-band-glow" aria-hidden="true" />
       <div className="workspace-topic-band-art">
         {presentation.artworkSrc ? (
@@ -52,7 +53,7 @@ export function ConversationTopicHeader({
             src={presentation.artworkSrc}
             alt=""
             fill
-            sizes="320px"
+            sizes="(max-width: 640px) 240px, (max-width: 1200px) 380px, 480px"
             className="object-cover"
             style={{ objectPosition: presentation.objectPosition }}
           />
@@ -61,93 +62,92 @@ export function ConversationTopicHeader({
         )}
       </div>
 
-      <div className="relative z-1 flex items-start justify-between gap-3 px-4 py-3 min-[1024px]:px-5 min-[1280px]:px-6">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+      <div className="workspace-topic-band-inner">
+        <div className="workspace-topic-band-top">
+          <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
               onClick={onOpenHistory}
-              className="border-border text-foreground inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border min-[900px]:hidden"
+              className="workspace-topic-icon-button inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full min-[900px]:hidden"
               aria-label={copy.openHistory}
             >
               <MenuIcon className="size-4" />
             </button>
-            <nav aria-label="Breadcrumb" className="text-muted min-w-0 text-[0.7rem]">
+            <nav aria-label="Breadcrumb" className="workspace-topic-breadcrumb min-w-0 text-[0.7rem]">
               <ol className="flex items-center gap-1.5">
                 <li>
-                  <Link href="/" className="hover:text-foreground">
+                  <Link href="/" className="hover:underline">
                     {copy.topicsCrumb}
                   </Link>
                 </li>
                 <li aria-hidden="true">/</li>
-                <li className="text-foreground truncate">{identity.title}</li>
+                <li className="truncate">{identity.title}</li>
               </ol>
             </nav>
           </div>
-
-          <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <h1 className="workspace-topic-title text-[1.28rem] leading-tight font-bold tracking-tight min-[1280px]:text-[1.42rem]">
-              {identity.title}
-            </h1>
-            {identity.badge ? (
-              <span className="bg-[var(--workspace-accent-soft)] text-[var(--workspace-accent-ink)] inline-flex items-center rounded-full px-2 py-0.5 text-[0.62rem] font-semibold">
-                {identity.badge}
-              </span>
-            ) : null}
-            <span className="text-muted text-[0.78rem]">{identity.subtitle}</span>
-          </div>
-
-          <ul className="text-muted mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[0.7rem]">
-            <li className="inline-flex items-center gap-1">
-              <SourcesMarkIcon className="size-3.5" />
-              {identity.sourceDescription}
-            </li>
-            {identity.knowledgeReviewDateLabel ? (
-              <li className="inline-flex items-center gap-1">
-                <CalendarIcon className="size-3.5" />
-                {identity.knowledgeReviewDateLabel}
-              </li>
-            ) : null}
-          </ul>
-
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <p className="text-muted max-w-[36rem] text-[0.7rem] leading-snug">
-              {guide.shortHint}
-            </p>
-            <button
-              type="button"
-              onClick={onOpenGuide}
-              className="text-muted hover:text-foreground inline-flex cursor-pointer items-center gap-1 text-[0.7rem] font-medium"
-              aria-haspopup="dialog"
-            >
-              <InfoCircleIcon className="size-3.5" />
-              {guide.openLabel}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <LanguageSwitch locale={locale} ariaLabel={copy.languageSwitchAria} />
-          <div className="flex items-center gap-2 min-[900px]:hidden">
+          <div className="workspace-topic-utilities">
+            <LanguageSwitch locale={locale} ariaLabel={copy.languageSwitchAria} />
             <button
               type="button"
               onClick={onNewConversation}
-              className="border-border text-foreground inline-flex size-8 cursor-pointer items-center justify-center rounded-full border"
+              className="workspace-topic-icon-button inline-flex size-8 cursor-pointer items-center justify-center rounded-full min-[900px]:hidden"
               aria-label={copy.newConversation}
             >
               <PlusIcon className="size-3.5" />
             </button>
-            {onOpenSources ? (
-              <button
-                type="button"
-                onClick={onOpenSources}
-                className="border-border text-foreground inline-flex cursor-pointer items-center gap-1 rounded-full border bg-white/80 px-2.5 py-1.5 text-[0.75rem] font-medium"
-              >
-                <SourcesMarkIcon className="size-3.5" />
-                {sourcesCountLabel ?? copy.sources}
-              </button>
-            ) : null}
           </div>
+        </div>
+
+        <div className="workspace-topic-band-copy">
+          {showIntro ? (
+            <>
+              <h1 className="sr-only">{identity.title}</h1>
+              <h2 className="workspace-topic-hook">{opening.title}</h2>
+              <p className="workspace-topic-description">{opening.body}</p>
+              <div className="workspace-topic-actions">
+                <button
+                  type="button"
+                  onClick={onOpenGuide}
+                  className="workspace-topic-about"
+                  aria-haspopup="dialog"
+                >
+                  <span className="workspace-topic-about-icon"><InfoCircleIcon className="size-3.5" /></span>
+                  {copy.aboutThisTopic}
+                  <span className="workspace-topic-about-arrow" aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="workspace-topic-compact-title">
+                <h1>{identity.title}</h1>
+                <span>{identity.subtitle}</span>
+              </div>
+              <div className="workspace-topic-compact-actions">
+                <p>{identity.sourceDescription}</p>
+                <button
+                  type="button"
+                  onClick={onOpenGuide}
+                  className="workspace-topic-about"
+                  aria-haspopup="dialog"
+                >
+                  <span className="workspace-topic-about-icon"><InfoCircleIcon className="size-3.5" /></span>
+                  {copy.aboutThisTopic}
+                  <span className="workspace-topic-about-arrow" aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </>
+          )}
+          {onOpenSources && sourcesCountLabel ? (
+            <button
+              type="button"
+              onClick={onOpenSources}
+              className="workspace-topic-sources-action inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.78rem] font-semibold min-[900px]:hidden"
+            >
+              <SourcesMarkIcon className="size-3.5" />
+              {sourcesCountLabel}
+            </button>
+          ) : null}
         </div>
       </div>
     </header>

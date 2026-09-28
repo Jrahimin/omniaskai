@@ -8,7 +8,7 @@ export const localeCookieName = "omniaskai_locale";
 
 export const localeShortLabels: Record<Locale, string> = {
   en: "EN",
-  bn: "বাং",
+  bn: "বাংলা",
 };
 
 export const localeChrome: Record<

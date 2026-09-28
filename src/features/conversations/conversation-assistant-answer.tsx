@@ -1,4 +1,6 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
 
 import type { Locale } from "@/lib/locale/locale";
 
@@ -14,6 +16,7 @@ import {
   formatLocalizedCount,
 } from "./conversation-guide";
 import type { ConversationCopy } from "./conversation-language";
+import { ConversationMascot } from "./conversation-mascot";
 import {
   CheckSmallIcon,
   CopyIcon,
@@ -24,6 +27,7 @@ import {
   ThumbUpIcon,
 } from "./conversation-icons";
 import { groupSourcesByDocument } from "./group-conversation-sources";
+import { presentConversationSource } from "./present-conversation-source";
 
 type ConversationAssistantAnswerProps = {
   locale: Locale;
@@ -60,9 +64,11 @@ export function ConversationAssistantAnswer({
   onCopy,
   onHelpful,
 }: ConversationAssistantAnswerProps) {
+  const [startedAt] = useState(() => Date.now());
+
   if (turn.status === "pending") {
     return (
-      <PendingAnswer copy={copy} createdAtLabel={createdAtLabel} />
+      <PendingAnswer copy={copy} createdAtLabel={createdAtLabel} startedAt={startedAt} />
     );
   }
 
@@ -74,7 +80,7 @@ export function ConversationAssistantAnswer({
 
     if (!text) {
       return (
-        <PendingAnswer copy={copy} createdAtLabel={createdAtLabel} />
+        <PendingAnswer copy={copy} createdAtLabel={createdAtLabel} startedAt={startedAt} />
       );
     }
 
@@ -92,6 +98,7 @@ export function ConversationAssistantAnswer({
         </div>
         <div className="workspace-answer-body mt-4">
           <AnswerRichText text={text} />
+          <span className="workspace-streaming-cursor" aria-hidden="true" />
         </div>
       </article>
     );
@@ -118,8 +125,8 @@ export function ConversationAssistantAnswer({
         sourceCount,
         cited.length,
         copy.basedOnEvidence,
-        copy.sourcesCount,
-        copy.referencesCount,
+        sourceCount === 1 ? copy.sourceCountOne : copy.sourcesCount,
+        cited.length === 1 ? copy.referenceCountOne : copy.referencesCount,
         locale,
       )
     : undefined;
@@ -129,8 +136,8 @@ export function ConversationAssistantAnswer({
           sourceCount,
           cited.length,
           copy.evidenceCounts,
-          copy.sourcesCount,
-          copy.referencesCount,
+          sourceCount === 1 ? copy.sourceCountOne : copy.sourcesCount,
+          cited.length === 1 ? copy.referenceCountOne : copy.referencesCount,
           locale,
         )
       : copy.sources;
@@ -181,6 +188,7 @@ export function ConversationAssistantAnswer({
                 after={
                   <CitationRow
                     locale={locale}
+                    copy={copy}
                     ids={block.citationIds}
                     catalog={catalog}
                     displayById={displayById}
@@ -211,6 +219,7 @@ export function ConversationAssistantAnswer({
                         {item.title}{" "}
                         <CitationRow
                           locale={locale}
+                          copy={copy}
                           ids={item.citationIds}
                           catalog={catalog}
                           displayById={displayById}
@@ -312,7 +321,7 @@ export function ConversationAssistantAnswer({
         <button
           type="button"
           onClick={onOpenSources}
-          className="text-muted hover:text-foreground inline-flex cursor-pointer items-center gap-1.5 rounded-full px-1.5 py-1 text-[0.74rem] font-medium min-[900px]:hidden"
+          className="workspace-answer-sources-action inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[0.74rem] font-semibold"
         >
           <SourcesMarkIcon className="size-3.5" />
           {sourcesLabel}
@@ -325,14 +334,27 @@ export function ConversationAssistantAnswer({
 function PendingAnswer({
   copy,
   createdAtLabel,
+  startedAt,
 }: {
   copy: ConversationCopy;
   createdAtLabel?: string;
+  startedAt: number;
 }) {
+  const [slow, setSlow] = useState(() => Date.now() - startedAt >= 20_000);
+
+  useEffect(() => {
+    const remaining = Math.max(0, 20_000 - (Date.now() - startedAt));
+    const timer = window.setTimeout(() => setSlow(true), remaining);
+    return () => window.clearTimeout(timer);
+  }, [startedAt]);
+
   return (
     <article className="workspace-answer-card workspace-answer-pending">
       <AnswerIdentity createdAtLabel={createdAtLabel} />
-      <p className="text-muted mt-4 text-[0.8rem]">{copy.pendingLabel}</p>
+      <p className="text-muted mt-4 flex items-center gap-2 text-[0.9rem]" role="status" aria-live="polite">
+        <span className="workspace-generation-dots" aria-hidden="true"><i /><i /><i /></span>
+        {slow ? copy.pendingSlow : copy.pendingLabel}
+      </p>
       <div className="mt-3 flex flex-col gap-2">
         <div className="workspace-pending-bar w-[88%]" />
         <div className="workspace-pending-bar w-[72%]" />
@@ -350,14 +372,8 @@ function AnswerIdentity({
   evidenceLabel?: string;
 }) {
   return (
-    <div className="flex min-w-0 items-start gap-2.5">
-      <Image
-        src="/brand/omniaskai-logo.png"
-        alt=""
-        width={28}
-        height={28}
-        className="mt-0.5 size-7 shrink-0 rounded-[0.55rem] ring-1 ring-black/6"
-      />
+    <div className="workspace-answer-identity flex min-w-0 items-start">
+      <ConversationMascot />
       <div className="min-w-0">
         <p className="text-[0.86rem] font-semibold tracking-tight">
           OmniAskAI
@@ -381,6 +397,7 @@ function AnswerIdentity({
 
 function CitationRow({
   locale,
+  copy,
   ids,
   catalog,
   displayById,
@@ -388,6 +405,7 @@ function CitationRow({
   onCitation,
 }: {
   locale: Locale;
+  copy: ConversationCopy;
   ids?: string[];
   catalog: ConversationSource[];
   displayById: Map<string, number>;
@@ -408,12 +426,20 @@ function CitationRow({
           return null;
         }
 
+        const sourceTitle = presentConversationSource({
+          title: source.title,
+          href: source.href,
+          fallbackTitle: copy.sourceFallbackTitle,
+        }).title;
+
         return (
           <button
             key={id}
             type="button"
             className="citation-chip"
-            aria-label={formatLocalizedCount(display, locale)}
+            aria-label={copy.citationLabel
+              .replace("{n}", formatLocalizedCount(display, locale))
+              .replace("{title}", sourceTitle)}
             aria-pressed={selectedSourceId === id}
             onClick={() => onCitation(id)}
           >

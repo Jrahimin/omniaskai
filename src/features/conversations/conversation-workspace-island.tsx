@@ -14,6 +14,7 @@ import {
   collectAnswerText,
   getActiveAssistantTurn,
   getConversationSourceIds,
+  isUserTurn,
   sourcesForIds,
 } from "./conversation";
 import { ConversationComposer } from "./conversation-composer";
@@ -34,9 +35,11 @@ import { ConversationThread } from "./conversation-thread";
 import { ConversationTopicGuideDialog } from "./conversation-topic-guide-dialog";
 import { ConversationTopicHeader } from "./conversation-topic-header";
 import { groupSourcesByDocument } from "./group-conversation-sources";
+import { resolveTopicOpening } from "./topic-opening";
 
 const CRAMPED_QUERY = "(max-width: 899px)";
 const SHEET_QUERY = "(max-width: 639px)";
+const EMPTY_TURNS: ConversationTurn[] = [];
 
 type ConversationWorkspaceIslandProps = {
   locale: Locale;
@@ -61,12 +64,14 @@ export function ConversationWorkspaceIsland({
   const historyDialogRef = useRef<HTMLDialogElement>(null);
   const sourcesDialogRef = useRef<HTMLDialogElement>(null);
   const guideDialogRef = useRef<HTMLDialogElement>(null);
+  const readingRef = useRef<HTMLElement>(null);
+  const followLatestRef = useRef(true);
   const abortRef = useRef<AbortController | null>(null);
   const operationSeq = useRef(0);
 
   const [cramped, setCramped] = useState(false);
   const [useSheet, setUseSheet] = useState(false);
-  const [historyCollapsed, setHistoryCollapsed] = useState(false);
+  const [historyCollapsed, setHistoryCollapsed] = useState(true);
   const [session, dispatch] = useReducer(
     workspaceSessionReducer,
     emptyWorkspaceSession,
@@ -88,9 +93,16 @@ export function ConversationWorkspaceIsland({
   >({});
   const [copiedAnswerId, setCopiedAnswerId] = useState<string | null>(null);
 
+  const opening = resolveTopicOpening({
+    slug: workspace.topicSlug,
+    locale,
+    identity,
+    copy,
+    starters: workspace.starterQuestions,
+  });
   const guide = resolveWorkspaceGuide(
     copy,
-    workspace.starterQuestions,
+    opening.guideQuestions,
     identity.aboutBody,
   );
   const pending = session.operationId !== null;
@@ -125,7 +137,21 @@ export function ConversationWorkspaceIsland({
   const selectedConversation = session.conversations.find(
     (item) => item.id === session.activeConversationId,
   );
-  const turns = selectedConversation?.turns ?? [];
+  const turns = selectedConversation?.turns ?? EMPTY_TURNS;
+
+  useEffect(() => {
+    const reading = readingRef.current;
+    if (reading) {
+      if (turns.length === 0) {
+        reading.scrollTop = 0;
+      } else if (followLatestRef.current) {
+        reading.scrollTop = reading.scrollHeight;
+      }
+    }
+  }, [turns]);
+  const hasAnswer = turns.some(
+    (turn) => turn.role === "assistant" && turn.status !== "pending",
+  );
   const activeAnswer = getActiveAssistantTurn(turns, activeAnswerId);
   const answerSources = sourcesForIds(
     session.sources,
@@ -144,20 +170,10 @@ export function ConversationWorkspaceIsland({
           groupedSourceCount,
           visibleSources.length,
           copy.evidenceCounts,
-          copy.sourcesCount,
-          copy.referencesCount,
-          locale,
-        )
-      : copy.sources;
-  const answerGroupCount = groupSourcesByDocument(answerSources).length;
-  const mobileSourcesLabel =
-    answerSources.length > 0
-      ? formatEvidenceCounts(
-          answerGroupCount,
-          answerSources.length,
-          copy.evidenceCounts,
-          copy.sourcesCount,
-          copy.referencesCount,
+          groupedSourceCount === 1 ? copy.sourceCountOne : copy.sourcesCount,
+          visibleSources.length === 1
+            ? copy.referenceCountOne
+            : copy.referencesCount,
           locale,
         )
       : copy.sources;
@@ -213,6 +229,7 @@ export function ConversationWorkspaceIsland({
 
   function selectConversation(id: string) {
     abortActive();
+    followLatestRef.current = true;
     dispatch({ type: "select-conversation", conversationId: id });
     setActiveAnswerId(null);
     setSelectedSourceId(null);
@@ -223,6 +240,7 @@ export function ConversationWorkspaceIsland({
 
   function startNewConversation() {
     abortActive();
+    followLatestRef.current = true;
     dispatch({ type: "new-conversation" });
     setActiveAnswerId(null);
     setSelectedSourceId(null);
@@ -331,6 +349,29 @@ export function ConversationWorkspaceIsland({
     });
   }
 
+  function handleStop() {
+    const conversation = session.conversations.find(
+      (item) => item.id === session.activeConversationId,
+    );
+    const assistantId = session.inFlightAssistantId;
+    const userTurn = conversation?.turns.find((turn, index, all) => {
+      const next = all[index + 1];
+      return (
+        isUserTurn(turn) &&
+        next &&
+        next.role === "assistant" &&
+        next.id === assistantId
+      );
+    });
+
+    abortActive();
+    dispatch({ type: "stop" });
+
+    if (!draft.trim() && userTurn && isUserTurn(userTurn)) {
+      setDraft(userTurn.text);
+    }
+  }
+
   function handleSubmit() {
     const text = draft;
 
@@ -344,6 +385,7 @@ export function ConversationWorkspaceIsland({
     }
 
     abortActive();
+    followLatestRef.current = true;
     operationSeq.current += 1;
     const operationId = String(operationSeq.current);
     const abort = new AbortController();
@@ -489,6 +531,22 @@ export function ConversationWorkspaceIsland({
     );
   }
 
+  function renderComposer() {
+    return (
+      <ConversationComposer
+        copy={copy}
+        placeholder={identity.composerPlaceholder}
+        value={draft}
+        disabled={!conversationEnabled || activeConversationBlocked}
+        busy={pending}
+        hasConversation={turns.length > 0}
+        onChange={setDraft}
+        onSubmit={handleSubmit}
+        onStop={handleStop}
+      />
+    );
+  }
+
   return (
     <div
       className="workspace-canvas"
@@ -506,7 +564,8 @@ export function ConversationWorkspaceIsland({
           copy={copy}
           identity={identity}
           presentation={presentation}
-          guide={guide}
+          opening={opening}
+          showIntro={turns.length === 0}
           onOpenHistory={openHistory}
           onNewConversation={startNewConversation}
           onOpenGuide={() => guideDialogRef.current?.showModal()}
@@ -517,22 +576,27 @@ export function ConversationWorkspaceIsland({
               openSourcesPanel();
             }
           }}
-          sourcesCountLabel={mobileSourcesLabel}
+          sourcesCountLabel={hasAnswer ? copy.conversationSourcesAction : undefined}
         />
 
         <div className="workspace-body">
           <div className="workspace-thread flex min-h-0 flex-col">
             <main
               id="main"
+              ref={readingRef}
               tabIndex={-1}
-              className="workspace-reading min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-5 pb-10 min-[1024px]:px-6"
+              onScroll={(event) => {
+                const reading = event.currentTarget;
+                followLatestRef.current = reading.scrollHeight - reading.scrollTop - reading.clientHeight < 120;
+              }}
+              className="workspace-reading min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-3 pb-6 min-[1024px]:px-6"
             >
               <ConversationThread
                 locale={locale}
                 copy={copy}
                 turns={turns}
                 catalog={session.sources}
-                starters={workspace.starterQuestions}
+                opening={opening}
                 activeAnswerId={activeAnswer?.id ?? null}
                 selectedSourceId={selectedSourceId}
                 helpfulByAnswer={helpfulByAnswer}
@@ -546,16 +610,7 @@ export function ConversationWorkspaceIsland({
                 onFollowUp={handleFollowUp}
               />
             </main>
-            <ConversationComposer
-              copy={copy}
-              placeholder={identity.composerPlaceholder}
-              value={draft}
-              disabled={
-                !conversationEnabled || pending || activeConversationBlocked
-              }
-              onChange={setDraft}
-              onSubmit={handleSubmit}
-            />
+            {renderComposer()}
           </div>
           <aside
             className="workspace-sources workspace-sources-rail"

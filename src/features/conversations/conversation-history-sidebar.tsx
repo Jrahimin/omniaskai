@@ -5,7 +5,6 @@ import type { Conversation } from "./conversation";
 import type { ConversationCopy } from "./conversation-language";
 import {
   CollapseSidebarIcon,
-  CrownIcon,
   ExpandSidebarIcon,
   PlusIcon,
   SearchIcon,
@@ -162,11 +161,8 @@ export function ConversationHistorySidebar({
         />
       </nav>
 
-      <div className="mx-3 mb-3 flex items-center gap-1.5 px-1 py-1">
-        <CrownIcon className="size-3.5 shrink-0 text-[#b8892d]" />
-        <p className="text-muted min-w-0 text-[0.7rem] leading-snug">
-          {copy.goDeeper}
-        </p>
+      <div className="mx-3 mb-3 px-1">
+        <p className="text-muted text-[0.78rem] leading-relaxed">{copy.sessionNote}</p>
       </div>
     </div>
   );

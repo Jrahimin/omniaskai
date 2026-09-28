@@ -2,6 +2,7 @@ import type { Topic } from "@/features/topics/topic";
 import type { Locale } from "@/lib/locale/locale";
 
 import { getLandingCopy } from "./get-landing-copy";
+import { LandingCoverage } from "./landing-coverage";
 import { LandingFeatureRow } from "./landing-feature-row";
 import { LandingFinalCta } from "./landing-final-cta";
 import { LandingHero } from "./landing-hero";
@@ -45,7 +46,7 @@ export function LandingPage({
       <main id="main" tabIndex={-1} className="overflow-x-clip">
         <LandingHero copy={copy} />
         {unavailable ? (
-          <section id="topics" className="relative scroll-mt-20 pt-6 pb-8">
+          <section id="topics" className="relative pt-6 pb-8">
             <div className="landing-wide">
               <h2 className="text-foreground text-center text-[1.55rem] font-bold tracking-tight">
                 {copy.topics.heading}
@@ -56,13 +57,14 @@ export function LandingPage({
             </div>
           </section>
         ) : (
-          <LandingTopicGrid copy={copy} topics={topics} />
+          <LandingTopicGrid locale={locale} copy={copy} topics={topics} />
         )}
         <LandingFeatureRow copy={copy} />
         <LandingHowItWorks copy={copy} />
+        <LandingCoverage copy={copy} />
         <LandingFinalCta copy={copy} />
       </main>
-      <SiteFooter footer={copy.footer} />
+      <SiteFooter copy={copy} />
     </div>
   );
 }

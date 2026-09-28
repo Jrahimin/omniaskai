@@ -239,7 +239,7 @@ Phase 2 merge-review fixes
 APE Admin reads time out; UTC inspection timestamps)
 
 Current focus:
-Finish Phase 2 merge checks, then Phase 3 — public users and retention
+Landing and Income Tax first-use now follow the 28 Sep UI review. Phase 3 remains public users and retention.
 
 Topic data:
 PostgreSQL catalog with draft/live revisions
@@ -251,8 +251,11 @@ Uploaded artwork is served at /media/[assetId]
 
 Workspace:
 Live streaming through /api/topics/[slug]/conversation-turns
-Page-session history; Auto reply language
-Starter questions on empty session; no generated follow-ups
+Page-session history starts collapsed and is labeled temporary until accounts exist
+Income Tax opens with outcome questions, an embedded composer, and “Year coverage not verified”
+Source titles and passages strip extraction noise, crawl ages, and unfinished sentences
+The evidence rail stays visible from 900px; a conversation-source action appears only after an answer
+Starter questions fill the composer; Stop restores an in-flight draft
 v2 continuation tokens bind to conversation_reference rows
 Lightweight conversation_reference + turn_operation persistence
 Helpful/not-helpful ratings persist per completed operation

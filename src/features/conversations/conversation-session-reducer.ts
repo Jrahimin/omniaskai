@@ -5,7 +5,7 @@ import type {
   ConversationTurn,
   ConversationTurnFinal,
 } from "./conversation";
-import { isAssistantTurn, mergeConversationSources } from "./conversation";
+import { isAssistantTurn, isUserTurn, mergeConversationSources } from "./conversation";
 
 export type WorkspaceSessionState = {
   conversations: Conversation[];
@@ -41,6 +41,7 @@ export type WorkspaceSessionAction =
   | { type: "token"; operationId: string; delta: string }
   | { type: "final"; operationId: string; payload: ConversationTurnFinal }
   | { type: "error"; operationId: string; retryable: boolean }
+  | { type: "stop" }
   | { type: "select-conversation"; conversationId: string }
   | { type: "new-conversation" };
 
@@ -99,6 +100,8 @@ export function workspaceSessionReducer(
       }
 
       return failInFlight(state, action.retryable);
+    case "stop":
+      return stopInFlight(state);
     case "select-conversation":
       return {
         ...failInFlight(state, false),
@@ -116,6 +119,60 @@ export function workspaceSessionReducer(
     default:
       return state;
   }
+}
+
+function stopInFlight(state: WorkspaceSessionState): WorkspaceSessionState {
+  const assistantId = state.inFlightAssistantId;
+  const conversationId = state.activeConversationId;
+
+  if (!assistantId || !conversationId) {
+    return {
+      ...state,
+      operationId: null,
+      inFlightAssistantId: null,
+    };
+  }
+
+  const conversations = state.conversations.flatMap((conversation) => {
+    if (conversation.id !== conversationId) {
+      return [conversation];
+    }
+
+    const turns = conversation.turns.filter((turn, index, all) => {
+      if (isAssistantTurn(turn) && turn.id === assistantId) {
+        return false;
+      }
+
+      const next = all[index + 1];
+
+      if (
+        isUserTurn(turn) &&
+        next &&
+        isAssistantTurn(next) &&
+        next.id === assistantId
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+
+    if (turns.length === 0) {
+      return [];
+    }
+
+    return [{ ...conversation, turns }];
+  });
+
+  return {
+    ...state,
+    conversations,
+    activeConversationId: conversations.some((item) => item.id === conversationId)
+      ? conversationId
+      : null,
+    operationId: null,
+    inFlightAssistantId: null,
+  };
 }
 
 function submitTurn(

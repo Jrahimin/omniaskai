@@ -7,6 +7,7 @@ import type {
 import { isAssistantTurn, isUserTurn } from "./conversation";
 import { ConversationAssistantAnswer } from "./conversation-assistant-answer";
 import type { ConversationCopy } from "./conversation-language";
+import type { TopicOpening } from "./topic-opening";
 import { CheckSmallIcon, SparkSmallIcon } from "./conversation-icons";
 
 type ConversationThreadProps = {
@@ -14,7 +15,6 @@ type ConversationThreadProps = {
   copy: ConversationCopy;
   turns: ConversationTurn[];
   catalog: ConversationSource[];
-  starters: string[];
   activeAnswerId: string | null;
   selectedSourceId: string | null;
   helpfulByAnswer: Record<string, "up" | "down" | null>;
@@ -26,6 +26,7 @@ type ConversationThreadProps = {
   onCopy: (turn: AssistantTurn) => void;
   onHelpful: (answerId: string, value: "up" | "down") => void;
   onFollowUp: (text: string) => void;
+  opening: TopicOpening;
 };
 
 export function ConversationThread({
@@ -33,7 +34,6 @@ export function ConversationThread({
   copy,
   turns,
   catalog,
-  starters,
   activeAnswerId,
   selectedSourceId,
   helpfulByAnswer,
@@ -45,32 +45,41 @@ export function ConversationThread({
   onCopy,
   onHelpful,
   onFollowUp,
+  opening,
 }: ConversationThreadProps) {
   if (turns.length === 0) {
     return (
-      <div className="workspace-thread-inner mx-auto flex max-w-[46rem] flex-col justify-center px-1 py-8">
-        <h2 className="text-[1.15rem] font-semibold tracking-tight">
-          {copy.emptyTitle}
-        </h2>
-        <p className="text-muted mt-2 text-[0.9rem] leading-relaxed">
-          {copy.emptyBody}
-        </p>
-        <p className="text-muted mt-5 text-[0.72rem] font-semibold tracking-wide uppercase">
-          {copy.startersLabel}
-        </p>
-        <ul className="mt-2 flex flex-col gap-2">
-          {starters.map((starter) => (
-            <li key={starter}>
+      <div className="workspace-opening workspace-thread-inner mx-auto flex w-full max-w-[50rem] flex-col pb-5">
+        <div className="workspace-opening-section-head">
+          <h3>{opening.starterLabel}</h3>
+          <p>{opening.starterHint}</p>
+        </div>
+        <ul className="workspace-opening-prompts">
+          {opening.cards.map((card, index) => (
+            <li key={card.question}>
               <button
                 type="button"
-                onClick={() => onFollowUp(starter)}
-                className="workspace-starter-chip w-full cursor-pointer px-3.5 py-2.5 text-left text-[0.88rem] leading-snug"
+                onClick={() => onFollowUp(card.question)}
+                className="workspace-opening-prompt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               >
-                {starter}
+                <span className="workspace-opening-prompt-top"><span className="workspace-opening-prompt-index">0{index + 1}</span><span aria-hidden="true" className="workspace-opening-prompt-arrow">↗</span></span>
+                <span className="workspace-opening-prompt-title">{card.title}</span>
+                {card.title !== card.question ? (
+                  <span className="workspace-opening-prompt-question">{card.question}</span>
+                ) : null}
               </button>
             </li>
           ))}
         </ul>
+        <details className="workspace-opening-coverage">
+          <summary><span>{opening.coverageTitle}</span><span aria-hidden="true">↗</span></summary>
+          <div className="text-muted mt-2 space-y-2 text-[0.84rem] leading-relaxed">
+            <p>{opening.coverageBody}</p>
+            {opening.coverageReview ? <p>{opening.coverageReview}</p> : null}
+            <p>{opening.coverageNote}</p>
+          </div>
+        </details>
+        {opening.coverageYear ? <p className="workspace-opening-year">{opening.coverageYear}</p> : null}
       </div>
     );
   }
@@ -89,7 +98,7 @@ export function ConversationThread({
       {turns.map((turn, index) => {
         if (isUserTurn(turn)) {
           return (
-            <div key={turn.id} className="flex justify-end">
+            <div key={turn.id} className="workspace-message-arrive flex justify-end">
               <div className="max-w-[min(28rem,88%)]">
                 <p className="text-muted mb-1 text-right text-[0.65rem]">
                   {copy.you} · {turn.createdAtLabel}

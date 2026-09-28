@@ -41,9 +41,9 @@ export const catalogSeedFixtureV1: CatalogFixture = {
             sources: ["NBR Guide", "Income Tax Act"],
           },
           starterQuestions: [
-            "What income sources are taxable in Bangladesh?",
-            "How is capital gain tax calculated?",
-            "Salary-r upor tax kivabe count hoy?",
+            "Which parts of salary count as income?",
+            "What information do you need to explain my filing situation?",
+            "Explain a tax term and show the supporting section.",
           ],
         },
         bn: {

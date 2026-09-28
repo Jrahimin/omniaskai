@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic } from "react";
+import { useOptimistic, useTransition } from "react";
 
 import type { Locale } from "./locale";
 import { localeShortLabels } from "./locale";
@@ -9,24 +9,37 @@ import { setLocaleFromForm } from "./set-locale";
 type LanguageSwitchProps = {
   locale: Locale;
   ariaLabel: string;
+  pendingLabel?: string;
 };
 
-export function LanguageSwitch({ locale, ariaLabel }: LanguageSwitchProps) {
+export function LanguageSwitch({
+  locale,
+  ariaLabel,
+  pendingLabel,
+}: LanguageSwitchProps) {
+  const [isPending, startTransition] = useTransition();
   const [optimisticLocale, setOptimisticLocale] = useOptimistic(locale);
+  const status =
+    pendingLabel ??
+    (optimisticLocale === "bn" ? "ভাষা বদলাচ্ছে" : "Updating language");
 
   return (
     <form
-      action={async (formData) => {
-        const value = formData.get("locale");
+      action={(formData) => {
+        startTransition(async () => {
+          const value = formData.get("locale");
 
-        if (value === "en" || value === "bn") {
-          setOptimisticLocale(value);
-        }
+          if (value === "en" || value === "bn") {
+            setOptimisticLocale(value);
+          }
 
-        await setLocaleFromForm(formData);
+          await setLocaleFromForm(formData);
+        });
       }}
       aria-label={ariaLabel}
+      aria-busy={isPending}
       data-locale={optimisticLocale}
+      data-pending={isPending ? "true" : "false"}
       className="locale-switch"
     >
       <span aria-hidden="true" className="locale-switch-pill" />
@@ -35,6 +48,7 @@ export function LanguageSwitch({ locale, ariaLabel }: LanguageSwitchProps) {
         type="submit"
         value="en"
         aria-pressed={optimisticLocale === "en"}
+        disabled={isPending}
       >
         {localeShortLabels.en}
       </button>
@@ -43,9 +57,13 @@ export function LanguageSwitch({ locale, ariaLabel }: LanguageSwitchProps) {
         type="submit"
         value="bn"
         aria-pressed={optimisticLocale === "bn"}
+        disabled={isPending}
       >
         {localeShortLabels.bn}
       </button>
+      <span className="sr-only" role="status">
+        {isPending ? status : ""}
+      </span>
     </form>
   );
 }
